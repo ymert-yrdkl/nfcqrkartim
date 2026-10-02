@@ -36,6 +36,7 @@ QR'lar ve NFC `https://ahmcloud.com/q/<KOD>` adresine gider; yönlendirme ve kur
 - Önizleme aracı (preview_start) bu projenin launch.json'unu görmüyor; dev sunucusu Bash arka planda çalıştırıldı.
 
 ## Durum (2 Ekim 2026)
+- YAYINDA: https://nfcqrkartimcom.ahmcloud.com (Coolify projesi `nfcqrkartim`, açık depo ymert-yrdkl/nfcqrkartim, kalıcı birim /veri). Push sonrası Coolify'da elle Deploy. `YONETICI_SIFRE` Coolify'a Yusuf tarafından eklenecek. Ayrıntı `docs/yayina-alma.md`.
 - Site tamam: ana sayfa, mağaza, 3 ürün sayfası, sepet (çekmece + sayfa), ödeme (havale/EFT), sipariş onay ve
   takip, sipariş sorgulama, nasıl çalışır, SSS, iletişim (mesaj formu), 7 yasal metin (taslak), 404,
   site haritası, robots (demo'da kapalı), paylaşım görseli; yönetim paneli (siparişler, durum, kargo takip,

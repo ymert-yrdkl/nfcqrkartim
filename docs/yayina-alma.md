@@ -1,5 +1,15 @@
 # Yayına alma (Coolify, nfcqrkartimcom.ahmcloud.com)
 
+## Durum (2 Ekim 2026): YAYINDA
+- Adres: https://nfcqrkartimcom.ahmcloud.com (Let's Encrypt sertifikası, Traefik).
+- Kod: açık depo https://github.com/ymert-yrdkl/nfcqrkartim (dal `main`).
+- Coolify: proje `nfcqrkartim` › `production` › uygulama (Public Git Repository, Build Pack: Dockerfile, port 3000).
+- Kalıcı birim: `…-nfcqrkartim-veri` → `/veri` (SQLite burada).
+- Ortam: `SITE_ADRESI`, `ARAMA_MOTORU_ACIK=0`. **`YONETICI_SIFRE` Yusuf ekleyecek** (eklenene kadar /yonetim kapalı).
+- DNS: Hostinger'da A kaydı `nfcqrkartimcom` → 187.124.174.57 (TTL 300).
+- Coolify www alt alanını da kendiliğinden ekledi; DNS'i olmadığı için yalnız onun sertifikası alınamaz, asıl alan adını etkilemez.
+- Depo açık olduğu için GitHub webhook yok: `git push` sonrası Coolify'da **Deploy** düğmesine basılır.
+
 Sunucu Ahmet'in; aşağıdaki adımlar Yusuf ve Ahmet'in onayıyla yapılır.
 
 ## 1. Kod
