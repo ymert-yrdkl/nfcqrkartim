@@ -1,0 +1,18 @@
+# Coolify "Docker Compose" kaynağı için. Alan adı Coolify'da "magaza" servisine verilir:
+#   https://nfcqrkartimcom.ahmcloud.com:3000  (sondaki :3000 konteyner portudur)
+services:
+  magaza:
+    build: .
+    restart: unless-stopped
+    environment:
+      - SITE_ADRESI=${SITE_ADRESI:-https://nfcqrkartimcom.ahmcloud.com}
+      - YONETICI_SIFRE=${YONETICI_SIFRE:?YONETICI_SIFRE gerekli}
+      - OTURUM_GIZLI=${OTURUM_GIZLI:?OTURUM_GIZLI gerekli (en az 32 karakter)}
+      - ARAMA_MOTORU_ACIK=${ARAMA_MOTORU_ACIK:-0}
+    volumes:
+      - magaza-veri:/veri
+    expose:
+      - "3000"
+
+volumes:
+  magaza-veri:
