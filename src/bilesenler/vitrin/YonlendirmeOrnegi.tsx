@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { ORNEK_KART_KODU } from "@/magaza/ayarlar";
 
 // Dinamik QR'ı anlatan küçük örnek: standdaki adres sabit, açılan sayfa seçilene göre değişir.
 // Adresler örnektir (gerçek bir işletmeye ait değildir).
@@ -25,7 +24,7 @@ export function YonlendirmeOrnegi() {
         <div>
           <p className="text-sm text-gece-soluk">Standdaki adres (hiç değişmez)</p>
           <p className="mt-1 font-mono text-[0.95rem] break-all text-kagit">
-            ahmcloud.com/q/<span className="text-sinyal">{ORNEK_KART_KODU.google}</span>
+            ahmcloud.com/q/<span className="text-sinyal">KARTKODU</span>
           </p>
         </div>
 

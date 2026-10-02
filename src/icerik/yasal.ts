@@ -45,7 +45,7 @@ const URUN_NITELIKLERI: YasalBlok = {
     "Ürün, işletmenin kasasına ya da masasına konmak için yapılmış 100 × 100 mm boyutunda bir pleksi standdır. Stand, 3 mm kalınlığında parlak beyaz pleksi bir pano ile 100 × 35 mm boyutunda bir tabandan oluşur.",
     "Panoda bir NFC çipi (telefon yaklaştırılınca okunan temassız çip) ve dinamik bir QR kod (yönlendirdiği adres sonradan değiştirilebilen kare kod) bulunur.",
     "Modeller: Google yorum standı, Instagram takip standı ve ikisini birlikte içeren ikili set. Siparişinizdeki model ve adet sipariş özetinde yazar.",
-    "Her standın kendine ait bir kart kodu vardır (örneğin 23EFXF). QR kod ve NFC çipi, bu kodla https://ahmcloud.com/q/KOD biçimindeki bir yönlendirme adresine gider.",
+    "Her standın kendine ait bir kart kodu vardır. QR kod ve NFC çipi, bu kodla https://ahmcloud.com/q/KOD biçimindeki bir yönlendirme adresine gider.",
     "Kartı kendi bağlantınıza (örneğin işletmenizin Google yorum sayfasına ya da Instagram profiline) https://ahmcloud.com/kart adresindeki kurulum panelinden, bir hesapla giriş yaparak siz bağlarsınız. Bağlantıyı istediğiniz zaman aynı panelden değiştirebilirsiniz.",
     "Yönlendirme hizmeti ürünle birlikte verilir. Hizmetin süresi ve kapsamı: {{YONLENDIRME_HIZMET_SURESI}}.",
     "Kartın çalışması için yönlendirme hizmetinin sürmesi ve okutan telefonun internete bağlı olması gerekir. Yönlendirme hizmeti sona ererse QR kod ve NFC çipi sizin bağlantınıza yönlendirmez.",
@@ -251,7 +251,7 @@ const MESAFELI_SATIS: YasalBelge = {
             "Tüketici: Ticari ya da mesleki olmayan amaçlarla hareket eden gerçek ya da tüzel kişi.",
             "Tacir: Ticari işletmeyi kendi adına işleten kişi ya da şirket.",
             "Kart: Siparişe konu, NFC çipli ve QR kodlu pleksi stand.",
-            "Kart kodu: Her karta ait, karttaki QR kodun ve NFC çipinin gittiği yönlendirme adresini belirleyen kod (örneğin 23EFXF).",
+            "Kart kodu: Her karta ait, karttaki QR kodun ve NFC çipinin gittiği yönlendirme adresini belirleyen kod.",
             "Kurulum paneli: Kartın bağlantısını belirlediğiniz ve değiştirdiğiniz, https://ahmcloud.com/kart adresindeki panel.",
             "Yönlendirme hizmeti: Kartı okutan kişiyi, kurulum panelinde belirlediğiniz bağlantıya yönlendiren hizmet.",
             "Kalıcı veri saklayıcısı: E-posta gibi, bilgiyi değiştirmeden saklamanıza ve yeniden açmanıza imkân veren araç.",
@@ -1064,7 +1064,7 @@ const KULLANIM_KOSULLARI: YasalBelge = {
         {
           tur: "liste",
           maddeler: [
-            "Her kartın kendine ait bir kodu vardır (örneğin 23EFXF). Kartın QR kodu ve NFC çipi https://ahmcloud.com/q/KOD biçimindeki yönlendirme adresine gider. Bu adres, kartı okutan kişiyi sizin belirlediğiniz bağlantıya yönlendirir.",
+            "Her kartın kendine ait bir kodu vardır. Kartın QR kodu ve NFC çipi https://ahmcloud.com/q/KOD biçimindeki yönlendirme adresine gider. Bu adres, kartı okutan kişiyi sizin belirlediğiniz bağlantıya yönlendirir.",
             "Kartı https://ahmcloud.com/kart adresindeki kurulum panelinden, bir hesapla giriş yaparak bağlarsınız. Bağlantıyı istediğiniz zaman değiştirebilirsiniz; kartı yeniden bastırmanız gerekmez.",
             "Yönlendirme hizmeti kartla birlikte verilir. Süresi ve kapsamı: {{YONLENDIRME_HIZMET_SURESI}}. Süre sonunda hizmetin devamına ilişkin koşulları, süre dolmadan önce kayıtlı iletişim bilgileriniz üzerinden size bildiririz.",
             "Kartın çalışması için yönlendirme hizmetinin sürmesi ve okutan telefonun internete bağlı olması gerekir. NFC ile okutmak için telefonun NFC özelliğinin bulunması ve açık olması gerekir; NFC'si olmayan telefonlar QR kodu kamerayla okutabilir.",

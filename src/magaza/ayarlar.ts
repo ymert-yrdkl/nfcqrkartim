@@ -13,7 +13,6 @@ export const SITE = {
 
 // Kartların bağlandığı kurulum paneli (QR'lar ahmcloud.com/q/<KOD> adresine gider).
 export const KURULUM_PANELI = "https://ahmcloud.com/kart";
-export const ORNEK_KART_KODU = { google: "23EFXF", instagram: "27KN9C" } as const;
 
 export const TICARI = {
   // Kargo ücreti (kuruş). 0 = ücretsiz (Yusuf onaylı, 2 Ekim 2026).

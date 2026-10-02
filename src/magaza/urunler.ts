@@ -97,5 +97,5 @@ export const TEKNIK_OZELLIKLER: { ad: string; deger: string }[] = [
   { ad: "Telefon uyumu", deger: "iPhone XS ve sonrası; NFC'si açık Android telefonlar. QR'ı her kameralı telefon okur." },
   { ad: "Uygulama", deger: "Gerekmez, ne sizin ne müşterinizin telefonunda" },
   { ad: "Yönlendirme", deger: "Dinamik: gideceği adresi kurulum panelinden değiştirirsiniz" },
-  { ad: "Kart kodu", deger: "Her panonun alt kısmında altı haneli kendi kodu var (örnek: 23EFXF)" },
+  { ad: "Kart kodu", deger: "Her panonun alt kısmında altı haneli kendi kodu var" },
 ];

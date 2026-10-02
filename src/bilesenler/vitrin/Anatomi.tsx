@@ -1,6 +1,5 @@
 import { UrunResmi } from "@/bilesenler/UrunResmi";
 import { GORSEL } from "@/gorseller";
-import { ORNEK_KART_KODU } from "@/magaza/ayarlar";
 
 // Açıklamalı ürün görseli: numaralı işaretler görselin üstünde, açıklamalar yanda (mobilde altta).
 const PARCALAR = [
@@ -23,7 +22,7 @@ const PARCALAR = [
     x: "36.5%",
     y: "80.5%",
     baslik: "Kart kodu",
-    metin: `Her panonun altı haneli kendi kodu var (bu örnekte ${ORNEK_KART_KODU.google}). Kurulumda standınızı bu kodla tanırız.`,
+    metin: "Her panonun altı haneli kendi kodu var. Kurulumda standınızı bu kodla tanırız.",
   },
   {
     no: 4,
