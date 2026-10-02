@@ -5,9 +5,9 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { TICARI } from "@/magaza/ayarlar";
 import { ILLER } from "@/magaza/iller";
-import { URUNLER, type UrunSlug } from "@/magaza/urunler";
+import { URUNLER, urunBul, type UrunSlug } from "@/magaza/urunler";
 import { hizSiniriAsildi, istemciIp } from "@/sunucu/istek";
-import { StokYetersiz, erisimImzasi, siparisOlustur } from "@/sunucu/siparis";
+import { StokYetersiz, erisimCerezi, siparisOlustur, suresiGecenleriIptalEt } from "@/sunucu/siparis";
 
 export type OdemeAlani =
   | "ad"
@@ -55,11 +55,11 @@ const sema = z
     adres: metin(10, 300, "Mahalle, sokak, bina ve daire numarasıyla açık adresi yazın."),
     postaKodu: z.preprocess(bosuNulla, z.string().regex(/^\d{5}$/, "Posta kodu 5 rakamdır.").nullable()),
     faturaTuru: z.enum(["bireysel", "kurumsal"]),
-    firmaUnvani: z.preprocess(bosuNulla, z.string().trim().max(150).nullable()),
-    vergiDairesi: z.preprocess(bosuNulla, z.string().trim().max(80).nullable()),
+    firmaUnvani: z.preprocess(bosuNulla, z.string().trim().max(150, "Firma unvanı en çok 150 karakter olabilir.").nullable()),
+    vergiDairesi: z.preprocess(bosuNulla, z.string().trim().max(80, "Vergi dairesi en çok 80 karakter olabilir.").nullable()),
     vergiNo: z.preprocess(bosuNulla, z.string().trim().nullable()),
     faturaAyni: z.preprocess((v) => v === "on", z.boolean()),
-    faturaAdresi: z.preprocess(bosuNulla, z.string().trim().max(300).nullable()),
+    faturaAdresi: z.preprocess(bosuNulla, z.string().trim().max(300, "Fatura adresi en çok 300 karakter olabilir.").nullable()),
     siparisNotu: z.preprocess(bosuNulla, z.string().trim().max(500, "Not en çok 500 karakter olabilir.").nullable()),
     sozlesme: z.literal("on", "Siparişi tamamlamak için ön bilgilendirme formunu ve mesafeli satış sözleşmesini onaylayın."),
   })
@@ -93,19 +93,21 @@ export async function siparisVer(_onceki: OdemeDurumu, form: FormData): Promise<
     return { hatalar: {}, genelHata: "Sipariş alınamadı. Sayfayı yenileyip tekrar deneyin." };
   }
 
-  const ip = await istemciIp();
-  if (hizSiniriAsildi(`siparis:${ip ?? "bilinmiyor"}`, 6, 15 * 60_000)) {
-    return {
-      hatalar: {},
-      genelHata: "Kısa sürede çok sipariş denemesi yapıldı. 15 dakika sonra tekrar deneyin ya da bize yazın.",
-    };
-  }
-
   let sepet;
   try {
     sepet = sepetSemasi.parse(JSON.parse(String(form.get("sepet") ?? "[]")));
   } catch {
     return { hatalar: {}, genelHata: "Sepetiniz okunamadı. Sepeti açıp ürünleri kontrol edin." };
+  }
+  const panoSayisi = sepet.reduce(
+    (t, s) => t + s.adet * (urunBul(s.slug)?.stok.reduce((a, k) => a + k.adet, 0) ?? 0),
+    0,
+  );
+  if (panoSayisi > TICARI.siparisBasinaEnCokPano) {
+    return {
+      hatalar: {},
+      genelHata: `Bir siparişte en çok ${TICARI.siparisBasinaEnCokPano} pano alınabiliyor (ikili set 2 pano sayılır). Daha fazlası için İletişim sayfasından bize yazın.`,
+    };
   }
 
   const sonuc = sema.safeParse(Object.fromEntries(form));
@@ -119,8 +121,18 @@ export async function siparisVer(_onceki: OdemeDurumu, form: FormData): Promise<
   }
   const v = sonuc.data;
 
+  // Hız sınırı yalnız geçerli sipariş denemelerini sayar (yanlış doldurulan form müşteriyi kilitlemesin).
+  const ip = await istemciIp();
+  if (hizSiniriAsildi(`siparis:${ip ?? "bilinmiyor"}`, 6, 15 * 60_000)) {
+    return {
+      hatalar: {},
+      genelHata: "Kısa sürede çok sipariş verildi. 15 dakika sonra tekrar deneyin ya da bize yazın.",
+    };
+  }
+
   let siparis;
   try {
+    suresiGecenleriIptalEt();
     siparis = siparisOlustur(
       {
         ad: v.ad,
@@ -147,16 +159,21 @@ export async function siparisVer(_onceki: OdemeDurumu, form: FormData): Promise<
         genelHata: `${hata.urunler.join(", ")} için stok yetersiz. Sepetteki adedi azaltıp tekrar deneyin.`,
       };
     }
-    throw hata;
+    console.error("Sipariş oluşturulamadı:", hata);
+    return {
+      hatalar: {},
+      genelHata: "Siparişiniz kaydedilemedi. Bilgileriniz duruyor; birkaç saniye sonra tekrar deneyin.",
+    };
   }
 
   // Müşteri bu tarayıcıda sipariş sayfasını bir gün boyunca anahtarsız da açabilsin.
-  (await cookies()).set(`siparis_${siparis.no}`, erisimImzasi(siparis.no), {
+  (await cookies()).set(`siparis_${siparis.no}`, erisimCerezi(siparis.no, "alici", 60 * 60 * 24), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     maxAge: 60 * 60 * 24,
     path: "/",
   });
+  // redirect try bloğunun dışında: Next onu kontrol akışı hatasıyla yapar.
   redirect(`/siparis/${siparis.no}?t=${siparis.anahtar}&yeni=1`);
 }

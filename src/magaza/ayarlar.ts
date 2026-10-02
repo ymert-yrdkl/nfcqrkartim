@@ -22,10 +22,12 @@ export const TICARI = {
   kargoyaVerilisGun: "1-3",
   kargoyaVerilis: "1-3 iş günü",
   kargoFirmasi: null as string | null,
-  // Havale bekleme süresi; bu süre geçince sipariş iptal edilebilir.
+  // Havale bekleme süresi. Süre + 1 gün geçen ödenmemiş siparişler kendiliğinden iptal edilir.
   odemeSuresiGun: 3,
   // Bir satırda en çok kaç adet sepete eklenebilir (toplu alım iletişimden).
   satirBasinaEnCok: 10,
+  // Bir siparişte en çok kaç pano (ikili set 2 pano sayılır). Stoğun tek siparişle kilitlenmesini önler.
+  siparisBasinaEnCokPano: 12,
   // ONAY BEKLİYOR: stand alındıktan sonra yönlendirme hizmeti ücretli mi?
   // Bu cümle SSS'te ve ürün sayfasında görünür. Doğrulanmadan yayına almayın.
   yonlendirmeUcreti:

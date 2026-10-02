@@ -35,6 +35,10 @@ export function stogaEkle(kalem: StokKalemi, adet: number) {
   vt().prepare("UPDATE stok SET adet = adet + ?, guncelleme = ? WHERE kalem = ?").run(adet, simdi(), kalem);
 }
 
-export function stokAyarla(kalem: StokKalemi, adet: number) {
-  vt().prepare("UPDATE stok SET adet = ?, guncelleme = ? WHERE kalem = ?").run(adet, simdi(), kalem);
+// Yöneticinin stok düzeltmesi. Form açıldığından beri stok değiştiyse (ör. araya sipariş girdi) yazmaz.
+export function stokAyarla(kalem: StokKalemi, adet: number, eskiAdet: number): boolean {
+  const sonuc = vt()
+    .prepare("UPDATE stok SET adet = ?, guncelleme = ? WHERE kalem = ? AND adet = ?")
+    .run(adet, simdi(), kalem, eskiAdet);
+  return sonuc.changes === 1;
 }

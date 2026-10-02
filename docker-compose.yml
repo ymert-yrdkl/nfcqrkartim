@@ -2,7 +2,10 @@
 #   https://nfcqrkartimcom.ahmcloud.com:3000  (sondaki :3000 konteyner portudur)
 services:
   magaza:
-    build: .
+    build:
+      context: .
+      args:
+        - SITE_ADRESI=${SITE_ADRESI:-https://nfcqrkartimcom.ahmcloud.com}
     restart: unless-stopped
     environment:
       - SITE_ADRESI=${SITE_ADRESI:-https://nfcqrkartimcom.ahmcloud.com}

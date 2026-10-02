@@ -11,7 +11,11 @@ const CEREZ = "yonetim";
 const SURE_SN = 12 * 60 * 60;
 
 const ozet = (s: string) => createHash("sha256").update(s).digest();
-const imzala = (veri: string) => createHmac("sha256", gizliAnahtar()).update(`yonetim:${veri}`).digest("base64url");
+// İmza şifrenin özetini de içerir: şifre değişince açık oturumlar geçersiz olur.
+const imzala = (veri: string) =>
+  createHmac("sha256", gizliAnahtar())
+    .update(`yonetim:${veri}:${ozet(process.env.YONETICI_SIFRE ?? "").toString("hex")}`)
+    .digest("base64url");
 
 export function yonetimAcikMi(): boolean {
   return (process.env.YONETICI_SIFRE ?? "").length >= 8;

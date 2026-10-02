@@ -1,7 +1,7 @@
 import "server-only";
 import { createHash, createHmac, randomBytes, randomInt, timingSafeEqual } from "node:crypto";
 import { TICARI } from "@/magaza/ayarlar";
-import { GECISLER, type SiparisDurumu } from "@/magaza/siparis-durumu";
+import { DURUM_ADI, GECISLER, type SiparisDurumu } from "@/magaza/siparis-durumu";
 import { urunBul, type StokKalemi, type UrunSlug } from "@/magaza/urunler";
 import { gizliAnahtar, islem, simdi, vt } from "./db";
 import { stogaEkle, stoktanDus } from "./stok";
@@ -230,8 +230,11 @@ function satirBul(no: string): SiparisSatiri | undefined {
 }
 
 // --- Müşteri erişimi -------------------------------------------------------------------------
-// Sipariş sayfası iki yolla açılır: (1) onay bağlantısındaki anahtar (?t=...), (2) sipariş sorgulamadan
-// sonra verilen imzalı çerez. Sipariş numarası tek başına yetmez.
+// Sipariş sayfası iki yolla açılır: (1) onay bağlantısındaki anahtar (?t=...), (2) imzalı ve süreli çerez.
+// Çerez iki türdür: "alici" (siparişi veren tarayıcı, tam bilgi) ve "sorgu" (sipariş sorgulamayla açılan,
+// kişisel bilgiler maskeli). Sipariş numarası tek başına yetmez.
+
+export type ErisimTuru = "alici" | "sorgu";
 
 export function anahtarIleBul(no: string, anahtar: string): Siparis | null {
   const satir = satirBul(no);
@@ -242,16 +245,25 @@ export function anahtarIleBul(no: string, anahtar: string): Siparis | null {
   return satirdanSiparis(satir);
 }
 
-export function erisimImzasi(no: string): string {
-  return createHmac("sha256", gizliAnahtar()).update(`siparis:${no}`).digest("base64url");
+const imza = (no: string, tur: ErisimTuru, bitis: number) =>
+  createHmac("sha256", gizliAnahtar()).update(`siparis:${no}:${tur}:${bitis}`).digest("base64url");
+
+// Çerez değeri: "<bitiş saniyesi>.<tür>.<imza>"
+export function erisimCerezi(no: string, tur: ErisimTuru, sureSn: number): string {
+  const bitis = Math.floor(Date.now() / 1000) + sureSn;
+  return `${bitis}.${tur}.${imza(no, tur, bitis)}`;
 }
 
-export function imzaIleBul(no: string, imza: string): Siparis | null {
-  const beklenen = Buffer.from(erisimImzasi(no));
-  const gelen = Buffer.from(imza);
-  if (beklenen.length !== gelen.length || !timingSafeEqual(beklenen, gelen)) return null;
+export function cerezIleBul(no: string, deger: string): { siparis: Siparis; tur: ErisimTuru } | null {
+  const [bitisMetni, tur, gelen] = deger.split(".");
+  const bitis = Number(bitisMetni);
+  if (!Number.isInteger(bitis) || bitis < Date.now() / 1000) return null;
+  if (tur !== "alici" && tur !== "sorgu") return null;
+  const a = Buffer.from(imza(no, tur, bitis));
+  const b = Buffer.from(gelen ?? "");
+  if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
   const satir = satirBul(no);
-  return satir ? satirdanSiparis(satir) : null;
+  return satir ? { siparis: satirdanSiparis(satir), tur } : null;
 }
 
 // Sipariş sorgulama: numara + telefonun son 4 hanesi.
@@ -306,7 +318,59 @@ export function durumSayilari(): Record<SiparisDurumu, number> {
   return sonuc;
 }
 
-// Durum değişikliği. İptalde stok geri eklenir. Kargoya verirken takip numarası yazılabilir.
+function kalemStoklari(siparisId: number) {
+  const kalemler = vt()
+    .prepare("SELECT urun_slug, adet FROM siparis_kalemi WHERE siparis_id = ?")
+    .all(siparisId) as { urun_slug: string; adet: number }[];
+  const ihtiyac: Partial<Record<StokKalemi, number>> = {};
+  for (const k of kalemler) {
+    const urun = urunBul(k.urun_slug);
+    if (!urun) continue;
+    for (const s of urun.stok) ihtiyac[s.kalem] = (ihtiyac[s.kalem] ?? 0) + s.adet * k.adet;
+  }
+  return Object.entries(ihtiyac) as [StokKalemi, number][];
+}
+
+// Durum değişikliği (yalnız bir transaction içinden çağrılır).
+// - İptalde stok geri eklenir; kargoya hiç verilmiş sipariş iptal edilemez (ürün müşteride olabilir).
+// - İptal geri alınırsa stok yeniden düşer; yetmezse hata.
+// - Kargodan geri dönülünce takip bilgisi silinir.
+function durumuYaz(
+  satir: SiparisSatiri,
+  yeni: SiparisDurumu,
+  ek: { aciklama?: string | null; kargoFirmasi?: string | null; kargoTakip?: string | null },
+  yapan: "yonetici" | "sistem",
+) {
+  if (!GECISLER[satir.durum].includes(yeni)) {
+    throw new Error(`"${DURUM_ADI[satir.durum]}" durumundan "${DURUM_ADI[yeni]}" durumuna geçilemez.`);
+  }
+  const zaman = simdi();
+  if (yeni === "iptal") {
+    const kargolandi = vt()
+      .prepare("SELECT 1 FROM siparis_olayi WHERE siparis_id = ? AND durum = 'kargoda' LIMIT 1")
+      .get(satir.id);
+    if (kargolandi) {
+      throw new Error("Kargoya verilmiş sipariş iptal edilemez. İade geldiyse stoğu Stok sayfasından düzeltin.");
+    }
+    for (const [kalem, adet] of kalemStoklari(satir.id)) stogaEkle(kalem, adet);
+  }
+  if (satir.durum === "iptal") {
+    for (const [kalem, adet] of kalemStoklari(satir.id)) {
+      if (!stoktanDus(kalem, adet)) throw new Error("Stok yetersiz; sipariş yeniden açılamadı.");
+    }
+  }
+  const kargoyuSil = yeni === "hazirlaniyor" || yeni === "odeme_bekliyor";
+  vt()
+    .prepare(
+      `UPDATE siparis SET durum = ?, guncelleme = ?,
+         kargo_firmasi = CASE WHEN ? THEN NULL ELSE COALESCE(?, kargo_firmasi) END,
+         kargo_takip = CASE WHEN ? THEN NULL ELSE COALESCE(?, kargo_takip) END
+       WHERE id = ?`,
+    )
+    .run(yeni, zaman, kargoyuSil ? 1 : 0, ek.kargoFirmasi ?? null, kargoyuSil ? 1 : 0, ek.kargoTakip ?? null, satir.id);
+  olayEkle(satir.id, yeni, ek.aciklama ?? null, yapan, zaman);
+}
+
 export function durumDegistir(
   no: string,
   yeni: SiparisDurumu,
@@ -314,28 +378,25 @@ export function durumDegistir(
 ) {
   return islem(() => {
     const satir = satirBul(no);
-    if (!satir) throw new Error("Sipariş bulunamadı");
-    if (!GECISLER[satir.durum].includes(yeni)) {
-      throw new Error(`"${satir.durum}" durumundan "${yeni}" durumuna geçilemez`);
-    }
-    const zaman = simdi();
-    if (yeni === "iptal") {
-      const kalemler = vt()
-        .prepare("SELECT urun_slug, adet FROM siparis_kalemi WHERE siparis_id = ?")
-        .all(satir.id) as { urun_slug: string; adet: number }[];
-      for (const k of kalemler) {
-        const urun = urunBul(k.urun_slug);
-        if (!urun) continue;
-        for (const s of urun.stok) stogaEkle(s.kalem, s.adet * k.adet);
-      }
-    }
-    vt()
-      .prepare(
-        `UPDATE siparis SET durum = ?, guncelleme = ?,
-           kargo_firmasi = COALESCE(?, kargo_firmasi), kargo_takip = COALESCE(?, kargo_takip)
-         WHERE id = ?`,
-      )
-      .run(yeni, zaman, ek.kargoFirmasi ?? null, ek.kargoTakip ?? null, satir.id);
-    olayEkle(satir.id, yeni, ek.aciklama ?? null, "yonetici", zaman);
+    if (!satir) throw new Error("Sipariş bulunamadı.");
+    durumuYaz(satir, yeni, ek, "yonetici");
   });
+}
+
+// Ödeme süresi (+1 gün ek süre) geçen siparişleri iptal eder, stoğu serbest bırakır.
+// Sayfalar stok okurken çağrılır; en çok 10 dakikada bir çalışır.
+const IPTAL_ARALIGI_MS = 10 * 60_000;
+const kuresel = globalThis as unknown as { __sonSureTaramasi?: number };
+
+export function suresiGecenleriIptalEt() {
+  const simdiMs = Date.now();
+  if (kuresel.__sonSureTaramasi && simdiMs - kuresel.__sonSureTaramasi < IPTAL_ARALIGI_MS) return;
+  kuresel.__sonSureTaramasi = simdiMs;
+  const sinir = new Date(simdiMs - (TICARI.odemeSuresiGun + 1) * 86_400_000).toISOString();
+  const eskiler = vt()
+    .prepare("SELECT * FROM siparis WHERE durum = 'odeme_bekliyor' AND olusturma < ?")
+    .all(sinir) as SiparisSatiri[];
+  for (const satir of eskiler) {
+    islem(() => durumuYaz(satir, "iptal", { aciklama: "Ödeme süresi doldu." }, "sistem"));
+  }
 }

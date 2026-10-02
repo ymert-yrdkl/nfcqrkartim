@@ -8,7 +8,9 @@ RUN npm ci --no-audit --no-fund
 
 FROM node:24-alpine AS derleme
 WORKDIR /app
-ENV NEXT_TELEMETRY_DISABLED=1
+# Statik sayfalardaki canonical / paylaşım adresleri derleme anında yazılır.
+ARG SITE_ADRESI=https://nfcqrkartimcom.ahmcloud.com
+ENV NEXT_TELEMETRY_DISABLED=1 SITE_ADRESI=$SITE_ADRESI
 COPY --from=bagimliliklar /app/node_modules ./node_modules
 COPY . .
 RUN npm run build

@@ -29,6 +29,7 @@ QR'lar ve NFC `https://ahmcloud.com/q/<KOD>` adresine gider; yönlendirme ve kur
 - `npm run dev -- --port 3100` · `npm run build` · `npm run lint` · `npx tsc --noEmit`
 - Ekran görüntüsü (sistem Chrome'u): `node scripts/ekran.mjs .ekran / /urun/ikili-set@390` (Git Bash'te
   `MSYS_NO_PATHCONV=1`). Paylaşım görseli ve ikonlar: `node scripts/paylasim-gorselleri.mjs` (dev açıkken).
+- Uçtan uca deneme: `node scripts/uctan-uca.mjs` (dev açıkken; sipariş → yönetim → sorgulama → stok çakışması).
 - Ürün render'ları: `python scripts/gorsel/urun_render.py` (numpy, Pillow, OpenCV).
 - Yerel yönetim paneli: `.env.local` içinde `YONETICI_SIFRE`, adres `/yonetim`.
 - Önizleme aracı (preview_start) bu projenin launch.json'unu görmüyor; dev sunucusu Bash arka planda çalıştırıldı.
@@ -38,4 +39,5 @@ QR'lar ve NFC `https://ahmcloud.com/q/<KOD>` adresine gider; yönlendirme ve kur
   takip, sipariş sorgulama, nasıl çalışır, SSS, iletişim (mesaj formu), 7 yasal metin (taslak), 404,
   site haritası, robots (demo'da kapalı), paylaşım görseli; yönetim paneli (siparişler, durum, kargo takip,
   stok, mesajlar). Uçtan uca denendi (sipariş → yönetim → kargoda → müşteri sorgusu).
+- Bağımsız inceleme (2 Eki) 16 bulgu verdi, hepsi düzeltildi: hız sınırı yalnız geçerli denemeyi sayar; stok kaydı iyimser kilitli; sipariş başına en çok 12 pano; ödeme süresi + 1 gün geçen sipariş kendiliğinden iptal (stok serbest); kargoya verilmiş sipariş iptal edilemez, iptal geri alınabilir; sorguyla açılan sipariş sayfası maskeli; çerezler süreli ve türlü; yönetim oturumu şifreye bağlı; hata sınırı sayfaları; Docker'da SITE_ADRESI derleme argümanı.
 - Açık kararlar: `docs/acik-kararlar.md`. Yayına alma: `docs/yayina-alma.md`.

@@ -88,6 +88,9 @@ export function UstMenu() {
         ref={menu}
         aria-label="Menü"
         className="menu-perdesi m-0 h-dvh max-h-dvh w-full max-w-full bg-kagit p-0 text-murekkep"
+        onClick={(e) => {
+          if ((e.target as HTMLElement).closest("a")) menu.current?.close();
+        }}
       >
         <div className="kabuk flex h-[var(--ust-menu)] items-center justify-between border-b border-cizgi">
           <Logo />

@@ -23,10 +23,6 @@ const sema = z.object({
 
 export async function mesajGonder(_onceki: MesajDurumu, form: FormData): Promise<MesajDurumu> {
   if (String(form.get("web_sitesi") ?? "") !== "") return { tamam: true, hatalar: {} };
-  const ip = await istemciIp();
-  if (hizSiniriAsildi(`mesaj:${ip ?? "bilinmiyor"}`, 5, 30 * 60_000)) {
-    return { tamam: false, hatalar: {}, genel: "Kısa sürede çok mesaj gönderildi. Biraz sonra tekrar deneyin." };
-  }
   const sonuc = sema.safeParse(Object.fromEntries(form));
   if (!sonuc.success) {
     const hatalar: NonNullable<MesajDurumu>["hatalar"] = {};
@@ -35,6 +31,11 @@ export async function mesajGonder(_onceki: MesajDurumu, form: FormData): Promise
       if (!hatalar[alan]) hatalar[alan] = s.message;
     }
     return { tamam: false, hatalar };
+  }
+  // Hız sınırı yalnız geçerli mesajları sayar.
+  const ip = await istemciIp();
+  if (hizSiniriAsildi(`mesaj:${ip ?? "bilinmiyor"}`, 5, 30 * 60_000)) {
+    return { tamam: false, hatalar: {}, genel: "Kısa sürede çok mesaj gönderildi. Biraz sonra tekrar deneyin." };
   }
   mesajKaydet({ ...sonuc.data, ip });
   return { tamam: true, hatalar: {} };

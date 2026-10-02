@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { UrunSecimi } from "@/bilesenler/vitrin/UrunSecimi";
 import { tl } from "@/magaza/para";
 import { URUNLER } from "@/magaza/urunler";
-import { satilabilirler } from "@/sunucu/stok";
+import { guncelSatilabilirler } from "@/sunucu/vitrin";
 
 export const metadata: Metadata = {
   title: "Mağaza",
@@ -19,7 +19,7 @@ const SATIRLAR: { ad: string; degerler: [string, string, string] }[] = [
 ];
 
 export default async function Magaza() {
-  const satilabilir = await satilabilirler();
+  const satilabilir = await guncelSatilabilirler();
   return (
     <>
       <UrunSecimi satilabilir={satilabilir} baslikSeviyesi={1} />

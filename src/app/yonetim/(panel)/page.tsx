@@ -3,7 +3,7 @@ import { TICARI } from "@/magaza/ayarlar";
 import { tl } from "@/magaza/para";
 import { DURUMLAR, DURUM_ADI, type SiparisDurumu } from "@/magaza/siparis-durumu";
 import { gunEkle, kisaTarih } from "@/magaza/tarih";
-import { durumSayilari, siparisleriListele } from "@/sunucu/siparis";
+import { durumSayilari, siparisleriListele, suresiGecenleriIptalEt } from "@/sunucu/siparis";
 import { stokOkuSenkron } from "@/sunucu/stok";
 import { yonetimGerekli } from "@/sunucu/yonetim-oturum";
 
@@ -17,6 +17,7 @@ const ROZET: Record<SiparisDurumu, string> = {
 
 export default async function Siparisler({ searchParams }: PageProps<"/yonetim">) {
   await yonetimGerekli();
+  suresiGecenleriIptalEt();
   const { durum: ham } = await searchParams;
   const durum = (DURUMLAR as readonly string[]).includes(String(ham)) ? (ham as SiparisDurumu) : "hepsi";
   const liste = siparisleriListele(durum);

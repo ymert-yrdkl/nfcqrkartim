@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useActionState } from "react";
+import { startTransition, useActionState, useEffect, useRef } from "react";
 import { CheckCircle } from "@phosphor-icons/react";
 import { dugmeSinifi } from "@/bilesenler/dugme";
 import { Alan, alanBaglari, kutuSinifi } from "@/bilesenler/form";
@@ -9,10 +9,16 @@ import { mesajGonder, type MesajDurumu } from "./eylem";
 export function MesajFormu() {
   const [durum, gonder, bekliyor] = useActionState<MesajDurumu, FormData>(mesajGonder, null);
   const h = durum?.hatalar ?? {};
+  const basari = useRef<HTMLDivElement>(null);
+
+  // Form başarı kutusuyla yer değiştirince odak kaybolmasın.
+  useEffect(() => {
+    if (durum?.tamam) basari.current?.focus();
+  }, [durum]);
 
   if (durum?.tamam) {
     return (
-      <div role="status" className="rounded-buyuk border border-cizgi bg-kagit-2 p-7">
+      <div ref={basari} tabIndex={-1} role="status" className="rounded-buyuk border border-cizgi bg-kagit-2 p-7 focus:outline-none">
         <p className="flex items-center gap-2 text-lg font-semibold">
           <CheckCircle size={22} weight="fill" className="text-basari" aria-hidden="true" /> Mesajınız bize ulaştı.
         </p>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { dugmeSinifi, type DugmeBoyu, type DugmeTuru } from "@/bilesenler/dugme";
+import { TICARI } from "@/magaza/ayarlar";
 import type { UrunSlug } from "@/magaza/urunler";
 import { sepetCekmecesiniAc, sepeteEkle, useSepet } from "./sepet-deposu";
 
@@ -35,6 +36,10 @@ export function SepeteEkle({
           ? `Stokta ${satilabilir} adet var, ${sepettekiAdet} tanesi zaten sepetinizde.`
           : `Stokta ${satilabilir} adet var.`,
       );
+      return;
+    }
+    if (sepettekiAdet + adet > TICARI.satirBasinaEnCok) {
+      setUyari(`Bir üründen en çok ${TICARI.satirBasinaEnCok} adet alınabiliyor. Daha fazlası için bize yazın.`);
       return;
     }
     setUyari(null);

@@ -59,6 +59,8 @@ export function OdemeFormu({ satilabilir }: { satilabilir: Record<UrunSlug, numb
   }, [durum]);
 
   const stokSorunu = satirlar.filter((s) => s.adet > (satilabilir[s.slug] ?? 0));
+  const panoSayisi = satirlar.reduce((t, s) => t + s.adet * (urunBul(s.slug)?.stok.reduce((a, k) => a + k.adet, 0) ?? 0), 0);
+  const panoFazla = panoSayisi > TICARI.siparisBasinaEnCokPano;
   const { adet, toplam } = sepetToplami(satirlar);
 
   if (satirlar.length === 0) {
@@ -327,9 +329,16 @@ export function OdemeFormu({ satilabilir }: { satilabilir: Record<UrunSlug, numb
             </p>
           )}
 
+          {panoFazla && (
+            <p role="alert" className="mt-6 rounded-orta border border-hata bg-hata-zemin p-4 text-sm">
+              Bir siparişte en çok {TICARI.siparisBasinaEnCokPano} pano alınabiliyor (ikili set 2 pano sayılır). Sepetinizde{" "}
+              {panoSayisi} pano var. Daha fazlası için İletişim sayfasından bize yazın.
+            </p>
+          )}
+
           <button
             type="submit"
-            disabled={bekliyor || stokSorunu.length > 0}
+            disabled={bekliyor || stokSorunu.length > 0 || panoFazla}
             className={dugmeSinifi("birincil", "buyuk", "mt-6 w-full sm:w-auto sm:min-w-72")}
           >
             {bekliyor ? "Sipariş alınıyor…" : `Siparişi tamamla, ${tl(toplam)}`}

@@ -18,7 +18,8 @@ export const GECISLER: Record<SiparisDurumu, SiparisDurumu[]> = {
   hazirlaniyor: ["kargoda", "odeme_bekliyor", "iptal"],
   kargoda: ["teslim_edildi", "hazirlaniyor"],
   teslim_edildi: ["kargoda"],
-  iptal: [],
+  // İptal geri alınabilir (stok yeniden düşer, yetmezse olmaz).
+  iptal: ["odeme_bekliyor"],
 };
 
 // Geçiş düğmesinin metni (yönetim paneli).

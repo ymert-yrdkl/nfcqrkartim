@@ -12,7 +12,7 @@ import { SORULAR } from "@/icerik/sss";
 import { SITE, TICARI } from "@/magaza/ayarlar";
 import { tl } from "@/magaza/para";
 import { URUNLER, setAvantaji, urunBul } from "@/magaza/urunler";
-import { satilabilirler } from "@/sunucu/stok";
+import { guncelSatilabilirler } from "@/sunucu/vitrin";
 
 export async function generateMetadata({ params }: PageProps<"/urun/[slug]">): Promise<Metadata> {
   const urun = urunBul((await params).slug);
@@ -42,7 +42,7 @@ function Akordeon({ baslik, acik = false, children }: { baslik: string; acik?: b
 export default async function UrunSayfasi({ params }: PageProps<"/urun/[slug]">) {
   const urun = urunBul((await params).slug);
   if (!urun) notFound();
-  const satilabilir = await satilabilirler();
+  const satilabilir = await guncelSatilabilirler();
   const adet = satilabilir[urun.slug];
   const digerleri = URUNLER.filter((u) => u.slug !== urun.slug);
 

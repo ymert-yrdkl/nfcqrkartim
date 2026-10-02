@@ -33,7 +33,8 @@ export function SepetCekmecesi() {
       aria-labelledby="sepet-baslik"
       className="cekmece m-0 ms-auto h-dvh max-h-dvh w-full max-w-[28rem] bg-kagit-2 p-0 text-murekkep shadow-[var(--shadow-cekmece)] backdrop:bg-murekkep/40"
       onClick={(e) => {
-        if (e.target === e.currentTarget) e.currentTarget.close();
+        // Arka plana ya da çekmecedeki bir bağlantıya tıklanınca kapan (aynı sayfanın bağlantısında yol değişmez).
+        if (e.target === e.currentTarget || (e.target as HTMLElement).closest("a")) e.currentTarget.close();
       }}
     >
       <div className="flex h-full flex-col">

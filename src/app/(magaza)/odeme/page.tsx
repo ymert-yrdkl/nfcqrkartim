@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { satilabilirler } from "@/sunucu/stok";
+import { guncelSatilabilirler } from "@/sunucu/vitrin";
 import { OdemeFormu } from "./OdemeFormu";
 
 export const metadata: Metadata = {
@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 };
 
 export default async function OdemeSayfasi() {
-  const satilabilir = await satilabilirler();
+  const satilabilir = await guncelSatilabilirler();
   return (
     <div className="kabuk pt-10 pb-24 lg:pt-14">
       <h1 className="text-bolum">Ödeme</h1>

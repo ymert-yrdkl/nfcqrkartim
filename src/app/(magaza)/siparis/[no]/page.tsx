@@ -8,7 +8,7 @@ import { BANKA, ILETISIM, KURULUM_PANELI, TICARI } from "@/magaza/ayarlar";
 import { tl, tlKesirli } from "@/magaza/para";
 import { DURUM_ADI, ILERLEME } from "@/magaza/siparis-durumu";
 import { gunEkle, tarih, tarihSaat } from "@/magaza/tarih";
-import { anahtarIleBul, imzaIleBul, type Siparis } from "@/sunucu/siparis";
+import { anahtarIleBul, cerezIleBul, type Siparis } from "@/sunucu/siparis";
 import { SepetiTemizle } from "./SepetiTemizle";
 
 export const metadata: Metadata = {
@@ -16,15 +16,29 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-async function siparisiBul(no: string, anahtar: string | undefined): Promise<Siparis | null> {
+// Erişim: onay bağlantısındaki anahtar ya da siparişi veren tarayıcının çerezi → tam bilgi;
+// sipariş sorgulamayla açılan çerez → kişisel bilgiler maskeli.
+async function siparisiBul(
+  no: string,
+  anahtar: string | undefined,
+): Promise<{ siparis: Siparis; maskeli: boolean } | null> {
   if (!/^NQ-\d{6}$/.test(no)) return null;
   if (anahtar) {
     const s = anahtarIleBul(no, anahtar);
-    if (s) return s;
+    if (s) return { siparis: s, maskeli: false };
   }
-  const imza = (await cookies()).get(`siparis_${no}`)?.value;
-  return imza ? imzaIleBul(no, imza) : null;
+  const cerezler = await cookies();
+  for (const ad of [`siparis_${no}`, `sorgu_${no}`]) {
+    const deger = cerezler.get(ad)?.value;
+    const bulunan = deger ? cerezIleBul(no, deger) : null;
+    if (bulunan) return { siparis: bulunan.siparis, maskeli: bulunan.tur === "sorgu" };
+  }
+  return null;
 }
+
+// "0532 111 22 33" → "0532 *** ** 33"
+const telefonMaskele = (t: string) => t.replace(/^(\d{4}) \d{3} \d{2} (\d{2})$/, "$1 *** ** $2");
+const metinMaskele = (m: string | null) => (m ? `${m.slice(0, 2)}${"*".repeat(Math.max(3, m.length - 2))}` : m);
 
 function Satir({ etiket, children }: { etiket: string; children: React.ReactNode }) {
   return (
@@ -40,9 +54,9 @@ export default async function SiparisSayfasi({ params, searchParams }: PageProps
   const sorgu = await searchParams;
   const anahtar = typeof sorgu.t === "string" ? sorgu.t : undefined;
   const yeni = sorgu.yeni === "1";
-  const siparis = await siparisiBul(no, anahtar);
+  const bulunan = await siparisiBul(no, anahtar);
 
-  if (!siparis) {
+  if (!bulunan) {
     return (
       <div className="kabuk pt-14 pb-24">
         <h1 className="text-bolum">Sipariş açılamadı</h1>
@@ -57,6 +71,7 @@ export default async function SiparisSayfasi({ params, searchParams }: PageProps
     );
   }
 
+  const { siparis, maskeli } = bulunan;
   const sonOdeme = tarih(gunEkle(siparis.olusturma, TICARI.odemeSuresiGun));
   const adim = ILERLEME.indexOf(siparis.durum);
   const iptal = siparis.durum === "iptal";
@@ -68,7 +83,12 @@ export default async function SiparisSayfasi({ params, searchParams }: PageProps
 
   return (
     <div className="kabuk pt-10 pb-24 lg:pt-14">
-      {yeni && <SepetiTemizle />}
+      {yeni && !maskeli && <SepetiTemizle />}
+      {maskeli && (
+        <p className="mb-6 rounded-orta border border-cizgi bg-kagit-2 p-3 text-sm text-murekkep-2">
+          Sipariş sorgulamayla açtınız; adres ve telefon gibi kişisel bilgiler gizli gösteriliyor.
+        </p>
+      )}
 
       <header className="max-w-3xl">
         {yeni ? (
@@ -239,11 +259,11 @@ export default async function SiparisSayfasi({ params, searchParams }: PageProps
               <p className="mt-2 text-murekkep-2">
                 {siparis.ad}
                 <br />
-                {siparis.adres}
+                {maskeli ? "Açık adres gizli" : siparis.adres}
                 <br />
-                {siparis.ilce} / {siparis.il} {siparis.postaKodu}
+                {siparis.ilce} / {siparis.il} {maskeli ? "" : siparis.postaKodu}
                 <br />
-                {siparis.telefon}
+                {maskeli ? telefonMaskele(siparis.telefon) : siparis.telefon}
               </p>
             </div>
             <div>
@@ -253,13 +273,13 @@ export default async function SiparisSayfasi({ params, searchParams }: PageProps
                   <>
                     {siparis.firmaUnvani}
                     <br />
-                    {siparis.vergiDairesi} V.D. · {siparis.vergiNo}
+                    {siparis.vergiDairesi} V.D. · {maskeli ? metinMaskele(siparis.vergiNo) : siparis.vergiNo}
                   </>
                 ) : (
                   <>Bireysel · {siparis.ad}</>
                 )}
                 <br />
-                {siparis.faturaAdresi ?? "Teslimat adresiyle aynı"}
+                {maskeli ? (siparis.faturaAdresi ? "Fatura adresi gizli" : "Teslimat adresiyle aynı") : (siparis.faturaAdresi ?? "Teslimat adresiyle aynı")}
               </p>
             </div>
           </div>

@@ -9,10 +9,10 @@ import { SoruListesi } from "@/bilesenler/vitrin/Sorular";
 import { UrunSecimi } from "@/bilesenler/vitrin/UrunSecimi";
 import { dugmeSinifi } from "@/bilesenler/dugme";
 import { SORULAR } from "@/icerik/sss";
-import { satilabilirler } from "@/sunucu/stok";
+import { guncelSatilabilirler } from "@/sunucu/vitrin";
 
 export default async function AnaSayfa() {
-  const satilabilir = await satilabilirler();
+  const satilabilir = await guncelSatilabilirler();
   return (
     <>
       <Kahraman />

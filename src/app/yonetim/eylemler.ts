@@ -56,14 +56,32 @@ export async function durumGuncelle(_onceki: DurumSonucu, form: FormData): Promi
   return { hata: null };
 }
 
-export async function stokKaydet(form: FormData) {
+export type StokSonucu = { hata: string | null; tamam: boolean } | null;
+
+export async function stokKaydet(_onceki: StokSonucu, form: FormData): Promise<StokSonucu> {
   await yonetimGerekli();
+  const degisen: string[] = [];
+  const cakisan: string[] = [];
   for (const kalem of ["google", "instagram"] as const) {
-    const adet = Number(form.get(kalem));
-    if (Number.isInteger(adet) && adet >= 0 && adet <= 100000) stokAyarla(kalem, adet);
+    const ham = String(form.get(kalem) ?? "").trim();
+    const eski = Number(form.get(`${kalem}_eski`));
+    if (ham === "") continue; // boş alan stoğu sıfırlamaz
+    const adet = Number(ham);
+    if (!Number.isInteger(adet) || adet < 0 || adet > 100000) {
+      return { hata: "Stok 0 ile 100000 arasında bir tam sayı olmalı.", tamam: false };
+    }
+    if (adet === eski) continue;
+    if (stokAyarla(kalem, adet, eski)) degisen.push(kalem);
+    else cakisan.push(kalem === "google" ? "Google" : "Instagram");
   }
-  revalidatePath("/yonetim", "layout");
   revalidatePath("/", "layout");
+  if (cakisan.length > 0) {
+    return {
+      hata: `${cakisan.join(" ve ")} stoğu siz sayfayı açtıktan sonra değişti (ör. yeni sipariş). Güncel değeri kontrol edip tekrar kaydedin.`,
+      tamam: false,
+    };
+  }
+  return { hata: null, tamam: degisen.length > 0 };
 }
 
 export async function mesajiOkunduYap(form: FormData) {

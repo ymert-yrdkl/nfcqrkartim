@@ -22,7 +22,7 @@ export default function Sss() {
   };
   return (
     <div className="kabuk pt-10 pb-24 lg:pt-14">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(veri).replace(/</g, "\u003c") }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(veri).replace(/</g, "\\u003c") }} />
       <h1 className="text-bolum">Sık sorulan sorular</h1>
       <p className="mt-4 max-w-[55ch] text-lg text-murekkep-2">
         Standın nasıl çalıştığı, kurulum, sipariş ve kargo. Burada olmayan bir soru için bize yazın.

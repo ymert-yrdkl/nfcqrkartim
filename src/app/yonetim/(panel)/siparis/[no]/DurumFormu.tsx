@@ -52,7 +52,10 @@ export function DurumFormu({ no, durum, gecisler }: { no: string; durum: Siparis
           <input type="hidden" name="durum" value={secilen} />
           <p className="font-medium">{etiket(secilen)}</p>
           {secilen === "iptal" && (
-            <p className="text-sm text-murekkep-2">İptal edilince bu siparişteki ürünler stoğa geri eklenir. Geri alınamaz.</p>
+            <p className="text-sm text-murekkep-2">
+              İptal edilince bu siparişteki ürünler stoğa geri eklenir. Gerekirse sonra &quot;Ödeme bekleniyor olarak
+              geri al&quot; ile yeniden açılabilir (stok yeterliyse).
+            </p>
           )}
           {secilen === "kargoda" && (
             <div className="grid gap-3 sm:grid-cols-2">

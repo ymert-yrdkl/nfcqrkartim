@@ -68,8 +68,9 @@ export function SepetSatirlari({ satirlar, buyuk = false }: { satirlar: SepetSat
 export function SetOnerisi({ satirlar }: { satirlar: SepetSatiri[] }) {
   const google = satirlar.find((s) => s.slug === "google-yorum-standi")?.adet ?? 0;
   const instagram = satirlar.find((s) => s.slug === "instagram-takip-standi")?.adet ?? 0;
-  const cift = Math.min(google, instagram);
-  if (cift === 0) return null;
+  const set = satirlar.find((s) => s.slug === "ikili-set")?.adet ?? 0;
+  const cift = Math.min(google, instagram, TICARI.satirBasinaEnCok - set);
+  if (cift <= 0) return null;
   return (
     <div className="flex items-center justify-between gap-3 rounded-orta border border-cizgi bg-kagit-2 p-3 text-sm">
       <p>
