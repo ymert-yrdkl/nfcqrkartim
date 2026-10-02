@@ -8,7 +8,8 @@ import { KURULUM_ADIMLARI } from "@/bilesenler/vitrin/Kurulum";
 import { OzellikTablosu } from "@/bilesenler/vitrin/Ozellikler";
 import { SoruListesi } from "@/bilesenler/vitrin/Sorular";
 import { StokBilgisi, UrunKarti } from "@/bilesenler/vitrin/UrunKarti";
-import { SORULAR } from "@/icerik/sss";
+import { sorular } from "@/icerik/sss";
+import { iyzicoAcikMi } from "@/sunucu/iyzico";
 import { SITE, TICARI } from "@/magaza/ayarlar";
 import { tl } from "@/magaza/para";
 import { URUNLER, setAvantaji, urunBul } from "@/magaza/urunler";
@@ -148,7 +149,7 @@ export default async function UrunSayfasi({ params }: PageProps<"/urun/[slug]">)
                 </li>
                 <li className="flex gap-3">
                   <Bank size={20} className="shrink-0" aria-hidden="true" />
-                  <span>Havale / EFT ile ödeme</span>
+                  <span>{iyzicoAcikMi() ? "Kartla (taksitli) ya da havale / EFT ile ödeme" : "Havale / EFT ile ödeme"}</span>
                 </li>
               </ul>
 
@@ -178,8 +179,7 @@ export default async function UrunSayfasi({ params }: PageProps<"/urun/[slug]">)
                 </Akordeon>
                 <Akordeon baslik="Kargo ve iade">
                   <p>
-                    Havale ya da EFT&apos;niz hesabımıza geçince siparişiniz {TICARI.kargoyaVerilis} içinde kargoya
-                    verilir. Teslim aldıktan sonra 14 gün içinde gerekçe göstermeden iade edebilirsiniz.{" "}
+                    Ödemeniz onaylanınca siparişiniz {TICARI.kargoyaVerilis} içinde kargoya verilir. Teslim aldıktan sonra 14 gün içinde gerekçe göstermeden iade edebilirsiniz.{" "}
                     <Link href="/yasal/iade-ve-cayma" className="text-murekkep underline">
                       İade adımları
                     </Link>
@@ -222,7 +222,7 @@ export default async function UrunSayfasi({ params }: PageProps<"/urun/[slug]">)
           </h2>
         </div>
         <div className="lg:col-span-8">
-          <SoruListesi sorular={SORULAR.filter((s) => s.anaSayfada)} />
+          <SoruListesi sorular={sorular(iyzicoAcikMi()).filter((s) => s.anaSayfada)} />
         </div>
       </section>
     </>

@@ -40,7 +40,12 @@ export default async function YonetimSiparis({ params }: PageProps<"/yonetim/sip
           <section className="rounded-buyuk border border-cizgi bg-kagit-2 p-6">
             <h2 className="font-sans text-lg font-semibold [font-stretch:100%]">Durumu değiştir</h2>
             <div className="mt-4">
-              <DurumFormu no={s.no} durum={s.durum} gecisler={GECISLER[s.durum]} />
+              <DurumFormu
+                no={s.no}
+                durum={s.durum}
+                gecisler={GECISLER[s.durum]}
+                kartlaOdendi={Boolean(s.odemeKimlik && s.odemeZamani)}
+              />
             </div>
           </section>
 
@@ -83,6 +88,16 @@ export default async function YonetimSiparis({ params }: PageProps<"/yonetim/sip
           <section className="rounded-buyuk border border-cizgi bg-kagit-2 p-6">
             <h2 className="font-sans text-lg font-semibold [font-stretch:100%]">Müşteri</h2>
             <dl className="mt-2 divide-y divide-cizgi">
+              <Bilgi etiket="Ödeme">
+                {s.odemeYontemi === "kart" ? "Kart (iyzico)" : "Havale / EFT"}
+                {s.odemeKimlik && (
+                  <>
+                    {" "}
+                    · ödeme no <span className="font-mono">{s.odemeKimlik}</span>
+                    {s.odemeZamani ? ` · ${tarihSaat(s.odemeZamani)}` : " · iyzico incelemesinde"}
+                  </>
+                )}
+              </Bilgi>
               <Bilgi etiket="Ad soyad">{s.ad}</Bilgi>
               <Bilgi etiket="Telefon">
                 <a href={`tel:${s.telefon.replace(/\s/g, "")}`} className="underline">

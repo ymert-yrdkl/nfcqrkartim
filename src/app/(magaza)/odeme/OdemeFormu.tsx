@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { startTransition, useActionState, useEffect, useRef, useState } from "react";
-import { Bank, LockSimple } from "@phosphor-icons/react";
+import { Bank, CreditCard, LockSimple } from "@phosphor-icons/react";
 import { dugmeSinifi } from "@/bilesenler/dugme";
 import { Alan, alanBaglari, kutuSinifi } from "@/bilesenler/form";
 import { SepetTutarlari } from "@/bilesenler/sepet/SepetParcalari";
@@ -30,6 +30,11 @@ const ALAN_ADLARI: Record<OdemeAlani, string> = {
   sozlesme: "Sözleşme onayı",
 };
 
+// Kartla ödemeye geçerken form bu sekmenin oturum belleğine yazılır; iyzico'dan başarısız dönülünce geri
+// doldurulur. Sipariş tamamlanınca silinir (SepetiTemizle). Sözleşme onayı ve bot tuzağı saklanmaz.
+export const FORM_ANAHTARI = "nfcqrkartim-odeme-formu";
+const SAKLANMAZ = new Set(["sozlesme", "web_sitesi", "sepet", "odeme"]);
+
 function Bolum({ no, baslik, children }: { no: number; baslik: string; children: React.ReactNode }) {
   return (
     <fieldset className="border-t border-cizgi pt-8">
@@ -44,12 +49,47 @@ function Bolum({ no, baslik, children }: { no: number; baslik: string; children:
   );
 }
 
-export function OdemeFormu({ satilabilir }: { satilabilir: Record<UrunSlug, number> }) {
+export function OdemeFormu({
+  satilabilir,
+  kartAcik,
+  denemeOrtami,
+  donusHatasi,
+}: {
+  satilabilir: Record<UrunSlug, number>;
+  kartAcik: boolean;
+  denemeOrtami: boolean;
+  donusHatasi: string | null; // iyzico'dan başarısız dönüşte gösterilecek mesaj
+}) {
   const satirlar = useSepet();
   const [durum, gonder, bekliyor] = useActionState<OdemeDurumu, FormData>(siparisVer, null);
-  const [faturaTuru, setFaturaTuru] = useState<"bireysel" | "kurumsal">("bireysel");
-  const [faturaAyni, setFaturaAyni] = useState(true);
+  const [odeme, setOdeme] = useState<"kart" | "havale">(kartAcik ? "kart" : "havale");
+  // iyzico'dan başarısız dönüşte daha önce yazılanlar (yalnız tarayıcıda okunur; form zaten sepet
+  // tarayıcıdan okununca çizildiği için sunucu çıktısıyla çakışmaz).
+  const [kayit] = useState<Record<string, string> | null>(() => {
+    if (!donusHatasi || typeof window === "undefined") return null;
+    try {
+      return JSON.parse(sessionStorage.getItem(FORM_ANAHTARI) ?? "null");
+    } catch {
+      return null;
+    }
+  });
+  const [faturaTuru, setFaturaTuru] = useState<"bireysel" | "kurumsal">(
+    kayit?.faturaTuru === "kurumsal" ? "kurumsal" : "bireysel",
+  );
+  const [faturaAyni, setFaturaAyni] = useState(kayit ? kayit.faturaAyni === "on" : true);
   const ozet = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // Kayıtlı değerleri form çizilince alanlara yaz (alanlar kontrolsüz, değer DOM'da tutulur).
+  useEffect(() => {
+    const form = formRef.current;
+    if (!kayit || !form) return;
+    for (const [ad, deger] of Object.entries(kayit)) {
+      const alan = form.elements.namedItem(ad);
+      if (alan instanceof HTMLInputElement && alan.type !== "checkbox" && alan.type !== "radio") alan.value = deger;
+      else if (alan instanceof HTMLTextAreaElement || alan instanceof HTMLSelectElement) alan.value = deger;
+    }
+  }, [kayit, satirlar.length]);
   const h = durum?.hatalar ?? {};
   const hataSayisi = Object.keys(h).length;
 
@@ -78,15 +118,35 @@ export function OdemeFormu({ satilabilir }: { satilabilir: Record<UrunSlug, numb
   return (
     <form
       noValidate
+      ref={formRef}
       onSubmit={(e) => {
         // <form action> yerine: React 19 hata dönünce formu sıfırlamasın, girilenler kalsın.
         e.preventDefault();
         const veri = new FormData(e.currentTarget);
+        if (odeme === "kart") {
+          const sakla: Record<string, string> = {};
+          for (const [ad, deger] of veri) if (!SAKLANMAZ.has(ad) && typeof deger === "string") sakla[ad] = deger;
+          try {
+            sessionStorage.setItem(FORM_ANAHTARI, JSON.stringify(sakla));
+          } catch {
+            // Depo kapalıysa dönüşte form boş gelir; ödeme yine çalışır.
+          }
+        }
         startTransition(() => gonder(veri));
       }}
       className="mt-8 grid gap-x-16 gap-y-10 lg:grid-cols-12"
     >
       <div className="space-y-10 lg:col-span-7">
+        {donusHatasi && !durum && (
+          <div role="alert" className="rounded-orta border border-hata bg-hata-zemin p-4">
+            <p className="font-medium">Kartla ödeme tamamlanmadı.</p>
+            <p className="mt-1 text-sm">
+              {donusHatasi} Kartınızdan para çekilmedi; sepetiniz duruyor. Sözleşme onayını yeniden işaretleyip tekrar
+              deneyebilir ya da havale / EFT seçebilirsiniz.
+            </p>
+          </div>
+        )}
+
         {(durum?.genelHata || hataSayisi > 0) && (
           <div
             ref={ozet}
@@ -266,18 +326,53 @@ export function OdemeFormu({ satilabilir }: { satilabilir: Record<UrunSlug, numb
         </Bolum>
 
         <Bolum no={4} baslik="Ödeme">
-          <label className="flex cursor-pointer gap-4 rounded-orta border border-murekkep bg-kagit-2 p-4 shadow-[inset_0_0_0_1px_var(--color-murekkep)]">
-            <input type="radio" name="odeme" value="havale" defaultChecked className="mt-1 size-4 accent-murekkep" />
-            <span>
-              <span className="flex items-center gap-2 font-medium">
-                <Bank size={18} aria-hidden="true" /> Havale / EFT
+          <div role="radiogroup" aria-label="Ödeme yöntemi" className="grid gap-3">
+            {kartAcik && (
+              <label className="flex cursor-pointer gap-4 rounded-orta border border-cerceve bg-kagit-2 p-4 hover:border-murekkep has-[:checked]:border-murekkep has-[:checked]:shadow-[inset_0_0_0_1px_var(--color-murekkep)]">
+                <input
+                  type="radio"
+                  name="odeme"
+                  value="kart"
+                  checked={odeme === "kart"}
+                  onChange={() => setOdeme("kart")}
+                  className="mt-1 size-4 accent-murekkep"
+                />
+                <span>
+                  <span className="flex items-center gap-2 font-medium">
+                    <CreditCard size={18} aria-hidden="true" /> Kredi / banka kartı
+                  </span>
+                  <span className="mt-1 block text-sm text-murekkep-2">
+                    iyzico&apos;nun güvenli ödeme sayfasında ödersiniz; kart bilgileriniz bize ulaşmaz. Taksit
+                    seçenekleri kartınıza göre o sayfada çıkar.
+                  </span>
+                  {denemeOrtami && (
+                    <span className="mt-2 block text-sm font-medium text-hata">
+                      Deneme ortamı: gerçek kart çekimi yapılmaz.
+                    </span>
+                  )}
+                </span>
+              </label>
+            )}
+            <label className="flex cursor-pointer gap-4 rounded-orta border border-cerceve bg-kagit-2 p-4 hover:border-murekkep has-[:checked]:border-murekkep has-[:checked]:shadow-[inset_0_0_0_1px_var(--color-murekkep)]">
+              <input
+                type="radio"
+                name="odeme"
+                value="havale"
+                checked={odeme === "havale"}
+                onChange={() => setOdeme("havale")}
+                className="mt-1 size-4 accent-murekkep"
+              />
+              <span>
+                <span className="flex items-center gap-2 font-medium">
+                  <Bank size={18} aria-hidden="true" /> Havale / EFT
+                </span>
+                <span className="mt-1 block text-sm text-murekkep-2">
+                  Siparişi tamamlayınca hesap bilgisi ve sipariş numaranız ekranda çıkar. Açıklamaya sipariş numarasını
+                  yazın. Ödeme {TICARI.odemeSuresiGun} gün içinde gelmezse sipariş iptal edilir.
+                </span>
               </span>
-              <span className="mt-1 block text-sm text-murekkep-2">
-                Siparişi tamamlayınca hesap bilgisi ve sipariş numaranız ekranda çıkar. Açıklamaya sipariş numarasını
-                yazın. Ödeme {TICARI.odemeSuresiGun} gün içinde gelmezse sipariş iptal edilir.
-              </span>
-            </span>
-          </label>
+            </label>
+          </div>
 
           <Alan ad="siparisNotu" etiket="Sipariş notu" hata={h.siparisNotu} istege className="mt-6">
             <textarea
@@ -341,10 +436,19 @@ export function OdemeFormu({ satilabilir }: { satilabilir: Record<UrunSlug, numb
             disabled={bekliyor || stokSorunu.length > 0 || panoFazla}
             className={dugmeSinifi("birincil", "buyuk", "mt-6 w-full sm:w-auto sm:min-w-72")}
           >
-            {bekliyor ? "Sipariş alınıyor…" : `Siparişi tamamla, ${tl(toplam)}`}
+            {bekliyor
+              ? odeme === "kart"
+                ? "Ödeme sayfası açılıyor…"
+                : "Sipariş alınıyor…"
+              : odeme === "kart"
+                ? `Kartla öde, ${tl(toplam)}`
+                : `Siparişi tamamla, ${tl(toplam)}`}
           </button>
           <p className="mt-3 flex items-center gap-2 text-sm text-soluk">
-            <LockSimple size={16} aria-hidden="true" /> Bağlantınız şifreli. Kart bilgisi istenmez.
+            <LockSimple size={16} aria-hidden="true" />
+            {odeme === "kart"
+              ? "Bir sonraki adımda iyzico'nun ödeme sayfasına geçersiniz."
+              : "Bağlantınız şifreli. Kart bilgisi istenmez."}
           </p>
         </div>
       </div>

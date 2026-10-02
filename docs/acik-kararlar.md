@@ -21,8 +21,16 @@ gizlenir ya da yasal metinlerde sarı "eklenecek" etiketiyle görünür.
 - Satılan her kartın kodu ahmcloud'da önceden tanımlı mı, siparişle kart kodu eşleştirilecek mi?
 - Sunucu konumu (KVKK aydınlatma metnine yazılacak).
 
+## Kartla ödeme (iyzico)
+- Kod hazır (2 Ekim 2026), sahte iyzico sunucusuyla uçtan uca denendi. Açmak için iyzico üye işyeri hesabı ve
+  anahtarlar gerekli; adımlar `docs/yayina-alma.md` › "Kartla ödeme (iyzico) açma". Önce deneme (sandbox)
+  anahtarlarıyla gerçek iyzico'ya karşı bir kez denenmeli.
+- Taksit: 1, 2, 3, 6, 9 açık (`src/sunucu/iyzico.ts` → `enabledInstallments`). Vade farkını kimin ödeyeceği
+  iyzico sözleşmesine bağlı.
+- iyzico müşteriden TC kimlik no ister; biz almıyoruz, genel değer (11111111111) gönderiliyor (yaygın uygulama).
+  iyzico ile teyit edilmeli.
+
 ## İleride
-- Kartla ödeme: iyzico ya da PayTR üye işyeri hesabı açılınca ödeme adımına eklenir.
 - Sipariş bildirimi: şu an yönetim panelinden takip ediliyor; e-posta/SMS/Telegram bildirimi eklenebilir.
 - Sosyal medya ajansının videoları hazır olunca ürün sayfalarına ve ana sayfaya eklenecek.
 - Alan adı nfcqrkartim.com alınınca `SITE_ADRESI` ve `ARAMA_MOTORU_ACIK=1`.

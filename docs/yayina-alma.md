@@ -12,6 +12,23 @@
 
 Sunucu Ahmet'in; aşağıdaki adımlar Yusuf ve Ahmet'in onayıyla yapılır.
 
+## Kartla ödeme (iyzico) açma
+1. iyzico üye işyeri hesabı (canlı) ya da deneme hesabı (sandbox-merchant.iyzipay.com) açın.
+2. Panelden API anahtarı ve gizli anahtarı alın. Coolify › uygulama › Environment Variables:
+   - `IYZICO_API_KEY`, `IYZICO_SECRET_KEY`
+   - `IYZICO_ADRES` = `https://sandbox-api.iyzipay.com` (deneme) ya da `https://api.iyzipay.com` (canlı)
+3. iyzico paneli › Ayarlar › Üye işyeri bildirimleri (webhook) adresi:
+   `https://nfcqrkartimcom.ahmcloud.com/api/odeme/iyzico/bildirim`
+   (müşteri ödedikten sonra tarayıcıyı kapatsa da sipariş onaylansın diye).
+4. Coolify'da Restart. Ödeme sayfasında "Kredi / banka kartı" çıkar; deneme ortamında kırmızı "gerçek çekim
+   yapılmaz" notu görünür. Deneme kartı: 5528 7900 0000 0008, son kullanma ileri bir tarih, CVC 123.
+5. Canlıya geçince `IYZICO_ADRES` ve anahtarları canlı olanlarla değiştirip Restart.
+
+Nasıl çalışır: müşteri iyzico'nun sayfasında öder (kart bilgisi bize gelmez) → iyzico tarayıcıyı
+`/api/odeme/iyzico`'ya döndürür → sonuç token ile iyzico'dan sorgulanır → sipariş "hazırlanıyor"a geçer.
+Başarısızsa sipariş iptal, stok geri, müşteri ödeme sayfasına döner (form ve sepet durur). Tamamlanmayan kartlı
+sipariş 45 dakikada düşer. İade iyzico panelinden yapılır (yönetim paneli kartla ödenmiş siparişte uyarır).
+
 ## 1. Kod
 GitHub'da özel bir depo açın (öneri: `ymert-yrdkl/nfcqrkartim`) ve gönderin:
 

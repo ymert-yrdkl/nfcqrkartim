@@ -100,7 +100,6 @@ export function AltBilgi() {
           <p className="flex flex-wrap gap-x-5">
             {ILETISIM.eposta && <a href={`mailto:${ILETISIM.eposta}`}>{ILETISIM.eposta}</a>}
             {ILETISIM.telefon && <a href={`tel:${ILETISIM.telefon.replace(/\s/g, "")}`}>{ILETISIM.telefon}</a>}
-            <span>Ödeme: havale / EFT</span>
           </p>
         </div>
         {/* Kapanış: büyük yazı markası, alt kenarı kesik. */}

@@ -7,7 +7,17 @@ import { DURUM_ADI, GECIS_ADI, ILERLEME, type SiparisDurumu } from "@/magaza/sip
 import { durumGuncelle, type DurumSonucu } from "../../../eylemler";
 
 // Siparişin geçebileceği durumlar için düğmeler. Geri dönüşler "Geri al" diye ayrı yazılır.
-export function DurumFormu({ no, durum, gecisler }: { no: string; durum: SiparisDurumu; gecisler: SiparisDurumu[] }) {
+export function DurumFormu({
+  no,
+  durum,
+  gecisler,
+  kartlaOdendi,
+}: {
+  no: string;
+  durum: SiparisDurumu;
+  gecisler: SiparisDurumu[];
+  kartlaOdendi: boolean;
+}) {
   const [sonuc, gonder, bekliyor] = useActionState<DurumSonucu, FormData>(durumGuncelle, null);
   const [secilen, setSecilen] = useState<SiparisDurumu | null>(null);
 
@@ -51,6 +61,12 @@ export function DurumFormu({ no, durum, gecisler }: { no: string; durum: Siparis
           <input type="hidden" name="no" value={no} />
           <input type="hidden" name="durum" value={secilen} />
           <p className="font-medium">{etiket(secilen)}</p>
+          {secilen === "iptal" && kartlaOdendi && (
+            <p className="rounded-orta border border-hata bg-hata-zemin p-3 text-sm">
+              Bu sipariş kartla ödendi. İptalden sonra parayı iyzico üye işyeri panelinden iade edin; site iadeyi
+              kendisi yapmaz.
+            </p>
+          )}
           {secilen === "iptal" && (
             <p className="text-sm text-murekkep-2">
               İptal edilince bu siparişteki ürünler stoğa geri eklenir. Gerekirse sonra &quot;Ödeme bekleniyor olarak

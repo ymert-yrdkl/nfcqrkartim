@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { dugmeSinifi } from "@/bilesenler/dugme";
 import { SoruListesi } from "@/bilesenler/vitrin/Sorular";
-import { SORULAR } from "@/icerik/sss";
+import { sorular } from "@/icerik/sss";
+import { iyzicoAcikMi } from "@/sunucu/iyzico";
 
 export const metadata: Metadata = {
   title: "Sık sorulan sorular",
@@ -10,7 +11,11 @@ export const metadata: Metadata = {
   alternates: { canonical: "/sss" },
 };
 
+// Ödeme cevapları ortam değişkenine (iyzico) bağlı: istek anında üretilir.
+export const dynamic = "force-dynamic";
+
 export default function Sss() {
+  const SORULAR = sorular(iyzicoAcikMi());
   const veri = {
     "@context": "https://schema.org",
     "@type": "FAQPage",

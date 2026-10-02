@@ -7,7 +7,16 @@ import { TICARI } from "@/magaza/ayarlar";
 import { ILLER } from "@/magaza/iller";
 import { URUNLER, urunBul, type UrunSlug } from "@/magaza/urunler";
 import { hizSiniriAsildi, istemciIp } from "@/sunucu/istek";
-import { StokYetersiz, erisimCerezi, siparisOlustur, suresiGecenleriIptalEt } from "@/sunucu/siparis";
+import { iyzicoAcikMi } from "@/sunucu/iyzico";
+import { kartOdemesiBaslat } from "@/sunucu/kart-odeme";
+import {
+  StokYetersiz,
+  erisimCerezi,
+  kartOdemesiBasarisiz,
+  siparisOlustur,
+  suresiGecenleriIptalEt,
+  yonetimBul,
+} from "@/sunucu/siparis";
 
 export type OdemeAlani =
   | "ad"
@@ -55,6 +64,7 @@ const sema = z
     adres: metin(10, 300, "Mahalle, sokak, bina ve daire numarasıyla açık adresi yazın."),
     postaKodu: z.preprocess(bosuNulla, z.string().regex(/^\d{5}$/, "Posta kodu 5 rakamdır.").nullable()),
     faturaTuru: z.enum(["bireysel", "kurumsal"]),
+    odeme: z.enum(["havale", "kart"], "Bir ödeme yöntemi seçin."),
     firmaUnvani: z.preprocess(bosuNulla, z.string().trim().max(150, "Firma unvanı en çok 150 karakter olabilir.").nullable()),
     vergiDairesi: z.preprocess(bosuNulla, z.string().trim().max(80, "Vergi dairesi en çok 80 karakter olabilir.").nullable()),
     vergiNo: z.preprocess(bosuNulla, z.string().trim().nullable()),
@@ -120,6 +130,9 @@ export async function siparisVer(_onceki: OdemeDurumu, form: FormData): Promise<
     return { hatalar, genelHata: null };
   }
   const v = sonuc.data;
+  if (v.odeme === "kart" && !iyzicoAcikMi()) {
+    return { hatalar: {}, genelHata: "Kartla ödeme şu an kapalı. Havale / EFT seçerek devam edebilirsiniz." };
+  }
 
   // Hız sınırı yalnız geçerli sipariş denemelerini sayar (yanlış doldurulan form müşteriyi kilitlemesin).
   const ip = await istemciIp();
@@ -151,6 +164,7 @@ export async function siparisVer(_onceki: OdemeDurumu, form: FormData): Promise<
       },
       sepet,
       ip,
+      v.odeme,
     );
   } catch (hata) {
     if (hata instanceof StokYetersiz) {
@@ -166,6 +180,24 @@ export async function siparisVer(_onceki: OdemeDurumu, form: FormData): Promise<
     };
   }
 
+  // Kartla ödemede müşteri iyzico'nun güvenli ödeme sayfasına gider. Sayfa açılamazsa sipariş iptal edilir,
+  // stok serbest kalır; sepet tarayıcıda durduğu için müşteri havale ile devam edebilir.
+  let odemeSayfasi: string | null = null;
+  if (v.odeme === "kart") {
+    try {
+      const kayit = yonetimBul(siparis.no);
+      if (!kayit) throw new Error("Sipariş okunamadı");
+      odemeSayfasi = await kartOdemesiBaslat(kayit);
+    } catch (hata) {
+      console.error("Kartla ödeme başlatılamadı:", hata);
+      kartOdemesiBasarisiz(siparis.no, "ödeme sayfası açılamadı");
+      return {
+        hatalar: {},
+        genelHata: "Kartla ödeme sayfası şu an açılamadı. Biraz sonra tekrar deneyin ya da havale / EFT seçin.",
+      };
+    }
+  }
+
   // Müşteri bu tarayıcıda sipariş sayfasını bir gün boyunca anahtarsız da açabilsin.
   (await cookies()).set(`siparis_${siparis.no}`, erisimCerezi(siparis.no, "alici", 60 * 60 * 24), {
     httpOnly: true,
@@ -175,5 +207,6 @@ export async function siparisVer(_onceki: OdemeDurumu, form: FormData): Promise<
     path: "/",
   });
   // redirect try bloğunun dışında: Next onu kontrol akışı hatasıyla yapar.
+  if (odemeSayfasi) redirect(odemeSayfasi);
   redirect(`/siparis/${siparis.no}?t=${siparis.anahtar}&yeni=1`);
 }

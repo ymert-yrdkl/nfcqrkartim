@@ -8,7 +8,8 @@ import { Ozellikler } from "@/bilesenler/vitrin/Ozellikler";
 import { SoruListesi } from "@/bilesenler/vitrin/Sorular";
 import { UrunSecimi } from "@/bilesenler/vitrin/UrunSecimi";
 import { dugmeSinifi } from "@/bilesenler/dugme";
-import { SORULAR } from "@/icerik/sss";
+import { sorular } from "@/icerik/sss";
+import { iyzicoAcikMi } from "@/sunucu/iyzico";
 import { guncelSatilabilirler } from "@/sunucu/vitrin";
 
 export default async function AnaSayfa() {
@@ -38,7 +39,7 @@ export default async function AnaSayfa() {
           </div>
         </div>
         <div className="lg:col-span-8">
-          <SoruListesi sorular={SORULAR.filter((s) => s.anaSayfada)} />
+          <SoruListesi sorular={sorular(iyzicoAcikMi()).filter((s) => s.anaSayfada)} />
         </div>
       </section>
     </>

@@ -1,40 +1,21 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { cookies } from "next/headers";
-import { ArrowUpRight, CheckCircle, WhatsappLogo } from "@phosphor-icons/react/dist/ssr";
+import { ArrowUpRight, CheckCircle, CreditCard, WhatsappLogo } from "@phosphor-icons/react/dist/ssr";
 import { dugmeSinifi } from "@/bilesenler/dugme";
 import { Kopyala } from "@/bilesenler/Kopyala";
 import { BANKA, ILETISIM, KURULUM_PANELI, TICARI } from "@/magaza/ayarlar";
 import { tl, tlKesirli } from "@/magaza/para";
 import { DURUM_ADI, ILERLEME } from "@/magaza/siparis-durumu";
 import { gunEkle, tarih, tarihSaat } from "@/magaza/tarih";
-import { anahtarIleBul, cerezIleBul, type Siparis } from "@/sunucu/siparis";
+import { iyzicoAcikMi } from "@/sunucu/iyzico";
+import { siparisiErisimleBul } from "@/sunucu/siparis-erisim";
+import { kartlaOde } from "./eylem";
 import { SepetiTemizle } from "./SepetiTemizle";
 
 export const metadata: Metadata = {
   title: "Siparişiniz",
   robots: { index: false, follow: false },
 };
-
-// Erişim: onay bağlantısındaki anahtar ya da siparişi veren tarayıcının çerezi → tam bilgi;
-// sipariş sorgulamayla açılan çerez → kişisel bilgiler maskeli.
-async function siparisiBul(
-  no: string,
-  anahtar: string | undefined,
-): Promise<{ siparis: Siparis; maskeli: boolean } | null> {
-  if (!/^NQ-\d{6}$/.test(no)) return null;
-  if (anahtar) {
-    const s = anahtarIleBul(no, anahtar);
-    if (s) return { siparis: s, maskeli: false };
-  }
-  const cerezler = await cookies();
-  for (const ad of [`siparis_${no}`, `sorgu_${no}`]) {
-    const deger = cerezler.get(ad)?.value;
-    const bulunan = deger ? cerezIleBul(no, deger) : null;
-    if (bulunan) return { siparis: bulunan.siparis, maskeli: bulunan.tur === "sorgu" };
-  }
-  return null;
-}
 
 // "0532 111 22 33" → "0532 *** ** 33"
 const telefonMaskele = (t: string) => t.replace(/^(\d{4}) \d{3} \d{2} (\d{2})$/, "$1 *** ** $2");
@@ -54,7 +35,13 @@ export default async function SiparisSayfasi({ params, searchParams }: PageProps
   const sorgu = await searchParams;
   const anahtar = typeof sorgu.t === "string" ? sorgu.t : undefined;
   const yeni = sorgu.yeni === "1";
-  const bulunan = await siparisiBul(no, anahtar);
+  const bulunan = await siparisiErisimleBul(no, anahtar);
+  const odemeUyarisi =
+    sorgu.odeme === "hata"
+      ? "Kartla ödeme sayfası şu an açılamadı. Biraz sonra tekrar deneyin."
+      : sorgu.odeme === "sinir"
+        ? "Kısa sürede çok deneme yapıldı. 15 dakika sonra tekrar deneyin."
+        : null;
 
   if (!bulunan) {
     return (
@@ -72,6 +59,22 @@ export default async function SiparisSayfasi({ params, searchParams }: PageProps
   }
 
   const { siparis, maskeli } = bulunan;
+  const kartAcik = iyzicoAcikMi();
+  const kartlaOdendi = Boolean(siparis.odemeKimlik && siparis.odemeZamani);
+  const incelemede = siparis.durum === "odeme_bekliyor" && Boolean(siparis.odemeKimlik) && !siparis.odemeZamani;
+  const kartBekliyor = siparis.durum === "odeme_bekliyor" && siparis.odemeYontemi === "kart" && !siparis.odemeKimlik;
+  const havaleBekliyor = siparis.durum === "odeme_bekliyor" && siparis.odemeYontemi === "havale" && !siparis.odemeKimlik;
+  // Kartla ödeme düğmesi: kartlı siparişte tamamlanmamışsa; havalede isteğe bağlı seçenek olarak.
+  const kartDugmesi = kartAcik && !maskeli && (kartBekliyor || havaleBekliyor) ? (
+    <form action={kartlaOde} className="mt-6">
+      <input type="hidden" name="no" value={siparis.no} />
+      {anahtar && <input type="hidden" name="t" value={anahtar} />}
+      <button type="submit" className={dugmeSinifi(kartBekliyor ? "birincil" : "cizgili", "orta", "gap-2")}>
+        <CreditCard size={18} aria-hidden="true" />
+        {kartBekliyor ? "Kartla ödemeyi tamamla" : "Kartla öde"}
+      </button>
+    </form>
+  ) : null;
   const sonOdeme = tarih(gunEkle(siparis.olusturma, TICARI.odemeSuresiGun));
   const adim = ILERLEME.indexOf(siparis.durum);
   const iptal = siparis.durum === "iptal";
@@ -94,7 +97,8 @@ export default async function SiparisSayfasi({ params, searchParams }: PageProps
         {yeni ? (
           <>
             <p className="flex items-center gap-2 font-medium text-basari">
-              <CheckCircle size={22} weight="fill" aria-hidden="true" /> Siparişiniz alındı
+              <CheckCircle size={22} weight="fill" aria-hidden="true" />
+              {kartlaOdendi ? "Ödemeniz alındı, siparişiniz hazırlanıyor" : "Siparişiniz alındı"}
             </p>
             <h1 className="mt-3 text-bolum">
               Teşekkürler. Sipariş numaranız <span className="fosfor font-mono">{siparis.no}</span>
@@ -138,7 +142,41 @@ export default async function SiparisSayfasi({ params, searchParams }: PageProps
             )}
           </section>
 
-          {siparis.durum === "odeme_bekliyor" && (
+          {odemeUyarisi && (
+            <p role="alert" className="rounded-orta border border-hata bg-hata-zemin p-4">
+              {odemeUyarisi}
+            </p>
+          )}
+
+          {kartlaOdendi && (
+            <p className="flex items-start gap-3 rounded-orta border border-cizgi bg-basari-zemin p-4">
+              <CreditCard size={20} className="mt-0.5 shrink-0" aria-hidden="true" />
+              <span>
+                Ödemeniz kartla alındı ({tlKesirli(siparis.toplam)}). Kartınızın ekstresinde iyzico olarak görünebilir.
+              </span>
+            </p>
+          )}
+
+          {incelemede && (
+            <p className="rounded-orta border border-cizgi bg-uyari-zemin p-4">
+              Kart ödemeniz alındı ve iyzico&apos;nun güvenlik incelemesinde. Onaylanınca siparişiniz hazırlanmaya
+              başlar; genelde kısa sürer.
+            </p>
+          )}
+
+          {kartBekliyor && (
+            <section aria-labelledby="kart-baslik" className="rounded-buyuk border border-murekkep bg-kagit-2 p-6 sm:p-7">
+              <h2 id="kart-baslik" className="font-sans text-xl font-semibold tracking-tight [font-stretch:100%]">
+                Kartla ödeme tamamlanmadı
+              </h2>
+              <p className="mt-2 text-murekkep-2">
+                Siparişiniz ödeme bekliyor. 45 dakika içinde ödenmezse iptal edilir ve ürünler stoğa döner.
+              </p>
+              {kartDugmesi}
+            </section>
+          )}
+
+          {havaleBekliyor && (
             <section aria-labelledby="odeme-baslik" className="rounded-buyuk border border-murekkep bg-kagit-2 p-6 sm:p-7">
               <h2 id="odeme-baslik" className="font-sans text-xl font-semibold tracking-tight [font-stretch:100%]">
                 Ödemeyi havale ya da EFT ile yapın
@@ -177,6 +215,12 @@ export default async function SiparisSayfasi({ params, searchParams }: PageProps
                 <a href={whatsapp} className={dugmeSinifi("cizgili", "orta", "mt-6 gap-2")}>
                   <WhatsappLogo size={18} aria-hidden="true" /> Dekontu WhatsApp&apos;tan gönderin
                 </a>
+              )}
+              {kartDugmesi && (
+                <div className="mt-6 border-t border-cizgi pt-5">
+                  <p className="text-sm text-murekkep-2">Havale yerine kartla ödemek isterseniz:</p>
+                  {kartDugmesi}
+                </div>
               )}
             </section>
           )}

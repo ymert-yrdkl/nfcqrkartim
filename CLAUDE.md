@@ -29,6 +29,10 @@ QR'lar ve NFC `https://ahmcloud.com/q/<KOD>` adresine gider; yönlendirme ve kur
 - `npm run dev -- --port 3100` · `npm run build` · `npm run lint` · `npx tsc --noEmit`
 - Ekran görüntüsü (sistem Chrome'u): `node scripts/ekran.mjs .ekran / /urun/ikili-set@390` (Git Bash'te
   `MSYS_NO_PATHCONV=1`). Paylaşım görseli ve ikonlar: `node scripts/paylasim-gorselleri.mjs` (dev açıkken).
+- Kartla ödeme (iyzico): `src/sunucu/iyzico.ts` (IYZWSv2 imzalı istemci), `src/sunucu/kart-odeme.ts` (başlat /
+  sonuçlandır), `/api/odeme/iyzico` (dönüş), `/api/odeme/iyzico/bildirim` (webhook). IYZICO_* ortam değişkenleri
+  yoksa kart seçeneği gizli. Yerel deneme: `node scripts/iyzico-sahte.mjs` + dev'i IYZICO_ADRES=http://localhost:3999
+  ile aç → `node scripts/kart-odeme-deneme.mjs` (14 denetim).
 - Uçtan uca deneme: `node scripts/uctan-uca.mjs` (dev açıkken; sipariş → yönetim → sorgulama → stok çakışması).
 - Videolar: `public/video/` (720×1280, sessiz, H.264). Kaynak: sosyal medya klasörü `06-medya/hazir/videolar/site/`. Sıkıştırma: `ffmpeg -i kaynak.mp4 -an -vf scale=720:1280,fps=24 -c:v libx264 -crf 27 -preset slow -movflags +faststart cikti.mp4` (bu makinede ffmpeg yok; `Projeler/flow/node_modules/ffmpeg-static/ffmpeg.exe` kullanıldı). Kayıt: `src/gorseller/index.ts` → `VIDEO`.
 - Ürün render'ları: `python scripts/gorsel/urun_render.py` (numpy, Pillow, OpenCV).

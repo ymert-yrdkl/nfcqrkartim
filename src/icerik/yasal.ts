@@ -123,8 +123,9 @@ const ON_BILGILENDIRME: YasalBelge = {
       baslik: "Ödeme",
       bloklar: [
         "Ödemeyi, ödeme sayfasında sunulan yöntemlerden biriyle yaparsınız.",
+        "Kredi ya da banka kartıyla ödemede ödeme, lisanslı ödeme kuruluşu iyzico'nun (İyzi Ödeme ve Elektronik Para Hizmetleri A.Ş.) güvenli ödeme sayfasında alınır. Kart bilgileriniz satıcıya iletilmez. Taksit seçenekleri ve varsa taksit farkı bu sayfada, ödemeden önce gösterilir. Ödeme onaylanmazsa ya da 45 dakika içinde tamamlanmazsa sipariş iptal edilir.",
         "Havale ya da EFT seçerseniz, siparişinizi onayladıktan sonra satıcının banka hesap bilgileri (IBAN) sipariş onay sayfasında gösterilir. Ödemenin siparişinizle eşleşmesi için ödeme açıklamasına sipariş numaranızı yazın.",
-        "Ödemeniz {{ODEME_SURESI_GUN}} gün içinde satıcının hesabına ulaşmazsa sipariş iptal edilir. Bu durumda taraflar birbirinden bir şey isteyemez.",
+        "Havale ya da EFT ile ödemeniz {{ODEME_SURESI_GUN}} gün içinde satıcının hesabına ulaşmazsa sipariş iptal edilir. Bu durumda taraflar birbirinden bir şey isteyemez.",
         "Satıcı sizden ayrıca teminat (güvence olarak alınan para ya da belge) istemez.",
       ],
     },
@@ -279,6 +280,7 @@ const MESAFELI_SATIS: YasalBelge = {
           maddeler: [
             "Satış bedeli, sipariş özetinde KDV (katma değer vergisi) dahil olarak yazan toplam bedeldir. Kargo ücreti varsa sipariş özetinde ayrıca gösterilir. Sipariş özetinde gösterilmeyen bir ücret sizden istenmez.",
             "Ödemeyi, ödeme sayfasında sunulan yöntemlerden biriyle yaparsınız.",
+            "Kartla ödemede ödeme, lisanslı ödeme kuruluşu iyzico'nun güvenli ödeme sayfasında alınır; kart bilgileriniz satıcıya iletilmez. Cayma ya da iade durumunda bedel, ödemenin yapıldığı karta iade edilir.",
             "Havale ya da EFT ile ödemede satıcının banka hesap bilgileri (IBAN) sipariş onay sayfasında gösterilir. Ödeme açıklamasına sipariş numaranızı yazmanız gerekir.",
             "Satıcı, sipariş özetindeki fatura bilgilerine göre fatura düzenler. Bireysel faturada ad soyad ve adres kullanılır; T.C. kimlik numarası istenmez. Kurumsal faturada firma unvanı, vergi dairesi ve vergi numarası kullanılır.",
             "Fatura bilgilerinin doğru ve eksiksiz girilmesi sizin sorumluluğunuzdadır.",
@@ -649,7 +651,7 @@ const KVKK: YasalBelge = {
             ],
             [
               "Ödeme ve iade",
-              "Havale ya da EFT ile ödemede banka hesap hareketinde görünen gönderen adı ve IBAN; cayma ya da iade durumunda para iadesi için bildirdiğiniz IBAN ve hesap sahibinin adı",
+              "Kartla ödemede iyzico'nun bildirdiği ödeme numarası, taksit sayısı ve kartın son dört hanesi (kart numarasının tamamı ve güvenlik kodu satıcıya ulaşmaz); havale ya da EFT ile ödemede banka hesap hareketinde görünen gönderen adı ve IBAN; cayma ya da iade durumunda para iadesi için bildirdiğiniz IBAN ve hesap sahibinin adı",
             ],
             [
               "İşlem güvenliği",
@@ -746,8 +748,8 @@ const KVKK: YasalBelge = {
               "Ad soyad, telefon, teslimat adresi; ürünün size teslimi",
             ],
             [
-              "Bankalar ve ödeme kuruluşları",
-              "Ödemenin alınması ve para iadesi için gereken bilgiler",
+              "Bankalar ve ödeme kuruluşları (kartla ödemede iyzico)",
+              "Ödemenin alınması, dolandırıcılık denetimi ve para iadesi için gereken bilgiler: ad soyad, telefon, e-posta, teslimat ve fatura adresi, IP adresi, sipariş tutarı ve ürünler. Kart bilgileri doğrudan iyzico'ya girilir, satıcıya ulaşmaz.",
             ],
             [
               "Muhasebe ve e-fatura hizmeti sağlayıcıları",

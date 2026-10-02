@@ -44,7 +44,9 @@ export type Siparis = {
   araToplam: number;
   kargo: number;
   toplam: number;
-  odemeYontemi: string;
+  odemeYontemi: OdemeYontemi;
+  odemeKimlik: string | null;
+  odemeZamani: string | null;
   kargoFirmasi: string | null;
   kargoTakip: string | null;
   olusturma: string;
@@ -84,7 +86,14 @@ export function sepetiHesapla(sepet: SepetKalemi[]) {
 
 // Siparişi tek işlemde oluşturur: stok düşer, sipariş + kalemler + ilk olay yazılır.
 // Dönen erişim anahtarı yalnız bir kez görünür (bağlantıya eklenir); veritabanında özeti durur.
-export function siparisOlustur(girdi: SiparisGirdisi, sepet: SepetKalemi[], ip: string | null) {
+export type OdemeYontemi = "havale" | "kart";
+
+export function siparisOlustur(
+  girdi: SiparisGirdisi,
+  sepet: SepetKalemi[],
+  ip: string | null,
+  odemeYontemi: OdemeYontemi = "havale",
+) {
   const hesap = sepetiHesapla(sepet);
   const anahtar = randomBytes(18).toString("base64url");
 
@@ -113,7 +122,7 @@ export function siparisOlustur(girdi: SiparisGirdisi, sepet: SepetKalemi[], ip: 
         `INSERT INTO siparis (no, erisim_ozet, durum, ad, telefon, eposta, il, ilce, adres, posta_kodu,
           fatura_turu, firma_unvani, vergi_dairesi, vergi_no, fatura_adresi, siparis_notu,
           ara_toplam, kargo, toplam, odeme_yontemi, sozlesme_onay_zamani, ip, olusturma, guncelleme)
-         VALUES (?, ?, 'odeme_bekliyor', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'havale', ?, ?, ?, ?)`,
+         VALUES (?, ?, 'odeme_bekliyor', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         no,
@@ -134,6 +143,7 @@ export function siparisOlustur(girdi: SiparisGirdisi, sepet: SepetKalemi[], ip: 
         hesap.araToplam,
         hesap.kargo,
         hesap.toplam,
+        odemeYontemi,
         zaman,
         ip,
         zaman,
@@ -145,8 +155,14 @@ export function siparisOlustur(girdi: SiparisGirdisi, sepet: SepetKalemi[], ip: 
     for (const k of hesap.kalemler) {
       kalemEkle.run(lastInsertRowid, k.urun.slug, k.urun.ad, k.urun.fiyat, k.adet, k.tutar);
     }
-    olayEkle(Number(lastInsertRowid), "odeme_bekliyor", "Sipariş alındı.", "musteri", zaman);
-    return { no, anahtar };
+    olayEkle(
+      Number(lastInsertRowid),
+      "odeme_bekliyor",
+      odemeYontemi === "kart" ? "Sipariş alındı, kartla ödeme bekleniyor." : "Sipariş alındı.",
+      "musteri",
+      zaman,
+    );
+    return { no, anahtar, hesap };
   });
 }
 
@@ -177,7 +193,10 @@ type SiparisSatiri = {
   ara_toplam: number;
   kargo: number;
   toplam: number;
-  odeme_yontemi: string;
+  odeme_yontemi: OdemeYontemi;
+  odeme_token: string | null;
+  odeme_kimlik: string | null;
+  odeme_zamani: string | null;
   kargo_firmasi: string | null;
   kargo_takip: string | null;
   olusturma: string;
@@ -216,6 +235,8 @@ function satirdanSiparis(s: SiparisSatiri): Siparis {
     kargo: s.kargo,
     toplam: s.toplam,
     odemeYontemi: s.odeme_yontemi,
+    odemeKimlik: s.odeme_kimlik,
+    odemeZamani: s.odeme_zamani,
     kargoFirmasi: s.kargo_firmasi,
     kargoTakip: s.kargo_takip,
     olusturma: s.olusturma,
@@ -392,11 +413,95 @@ export function suresiGecenleriIptalEt() {
   const simdiMs = Date.now();
   if (kuresel.__sonSureTaramasi && simdiMs - kuresel.__sonSureTaramasi < IPTAL_ARALIGI_MS) return;
   kuresel.__sonSureTaramasi = simdiMs;
-  const sinir = new Date(simdiMs - (TICARI.odemeSuresiGun + 1) * 86_400_000).toISOString();
+  const havaleSiniri = new Date(simdiMs - (TICARI.odemeSuresiGun + 1) * 86_400_000).toISOString();
+  // iyzico ödeme sayfasının token'ı 30 dakika geçerli; tamamlanmayan kartlı sipariş 45 dakikada düşer.
+  const kartSiniri = new Date(simdiMs - 45 * 60_000).toISOString();
   const eskiler = vt()
-    .prepare("SELECT * FROM siparis WHERE durum = 'odeme_bekliyor' AND olusturma < ?")
-    .all(sinir) as SiparisSatiri[];
+    .prepare(
+      `SELECT * FROM siparis WHERE durum = 'odeme_bekliyor' AND odeme_kimlik IS NULL
+         AND ((odeme_yontemi = 'havale' AND olusturma < ?) OR (odeme_yontemi = 'kart' AND guncelleme < ?))`,
+    )
+    .all(havaleSiniri, kartSiniri) as SiparisSatiri[];
   for (const satir of eskiler) {
-    islem(() => durumuYaz(satir, "iptal", { aciklama: "Ödeme süresi doldu." }, "sistem"));
+    const neden = satir.odeme_yontemi === "kart" ? "Kartla ödeme tamamlanmadı." : "Ödeme süresi doldu.";
+    islem(() => durumuYaz(satir, "iptal", { aciklama: neden }, "sistem"));
   }
+}
+
+// --- Kartla ödeme (iyzico) ----------------------------------------------------------------------
+
+export function odemeTokeniKaydet(no: string, token: string) {
+  vt().prepare("UPDATE siparis SET odeme_token = ?, guncelleme = ? WHERE no = ?").run(token, simdi(), no);
+}
+
+export function tokenIleSiparisNo(token: string): string | null {
+  const satir = vt().prepare("SELECT no FROM siparis WHERE odeme_token = ?").get(token) as { no: string } | undefined;
+  return satir?.no ?? null;
+}
+
+// iyzico'dan doğrulanmış başarılı ödeme: sipariş "hazırlanıyor"a geçer. Aynı ödeme ikinci kez gelirse
+// (dönüş + webhook) hiçbir şey yapmaz. Sipariş bu arada süre dolduğu için iptal edildiyse yeniden açılır;
+// stok yetmezse sipariş iptal kalır ve yöneticiye iade notu düşülür.
+export function kartOdemesiniOnayla(
+  no: string,
+  odeme: { odemeKimlik: string; tutar: number; taksit: number; kartSon4: string | null },
+): "onaylandi" | "zaten" | "tutar-uyusmuyor" | "stok-yok" | "yok" {
+  return islem(() => {
+    const satir = satirBul(no);
+    if (!satir) return "yok";
+    // Aynı ödeme daha önce onaylandıysa (dönüş + webhook ikisi de gelir) tekrar işlenmez.
+    if (satir.odeme_kimlik === odeme.odemeKimlik && satir.odeme_zamani) return "zaten";
+    // Sipariş zaten başka bir kart ödemesiyle ödenmiş: ikinci çekim. Kayıt korunur, yöneticiye iade notu düşülür.
+    if (satir.odeme_zamani && satir.odeme_kimlik !== odeme.odemeKimlik) {
+      const zatenVar = vt()
+        .prepare("SELECT 1 FROM siparis_olayi WHERE siparis_id = ? AND aciklama LIKE ?")
+        .get(satir.id, `%ikinci kart ödemesi%${odeme.odemeKimlik}%`);
+      if (!zatenVar) {
+        olayEkle(satir.id, satir.durum, `DİKKAT: ikinci kart ödemesi geldi (ödeme no ${odeme.odemeKimlik}). Sipariş zaten ödenmişti; bu tutarı iyzico panelinden iade edin.`, "sistem");
+      }
+      return "zaten";
+    }
+    if (odeme.tutar !== satir.toplam) {
+      olayEkle(satir.id, satir.durum, `DİKKAT: iyzico tutarı (${odeme.tutar / 100} TL) sipariş tutarıyla uyuşmuyor. Ödeme no: ${odeme.odemeKimlik}`, "sistem");
+      return "tutar-uyusmuyor";
+    }
+    const zaman = simdi();
+    vt()
+      .prepare("UPDATE siparis SET odeme_kimlik = ?, odeme_zamani = ?, odeme_yontemi = 'kart', guncelleme = ? WHERE id = ?")
+      .run(odeme.odemeKimlik, zaman, zaman, satir.id);
+    const aciklama = `Kartla ödendi (iyzico, ödeme no ${odeme.odemeKimlik}${odeme.taksit > 1 ? `, ${odeme.taksit} taksit` : ""}${odeme.kartSon4 ? `, kart ****${odeme.kartSon4}` : ""}).`;
+    if (satir.durum === "iptal") {
+      try {
+        durumuYaz(satir, "odeme_bekliyor", { aciklama: "Geç gelen kart ödemesi için yeniden açıldı." }, "sistem");
+      } catch {
+        olayEkle(satir.id, "iptal", `DİKKAT: ${aciklama} Sipariş iptal edilmişti ve stok yetmediği için açılamadı; iyzico panelinden iade edin.`, "sistem");
+        return "stok-yok";
+      }
+      durumuYaz({ ...satir, durum: "odeme_bekliyor" }, "hazirlaniyor", { aciklama }, "sistem");
+      return "onaylandi";
+    }
+    if (satir.durum === "odeme_bekliyor") durumuYaz(satir, "hazirlaniyor", { aciklama }, "sistem");
+    else olayEkle(satir.id, satir.durum, aciklama, "sistem");
+    return "onaylandi";
+  });
+}
+
+// Ödeme incelemeye alındı (iyzico dolandırıcılık denetimi): sipariş bekler, not düşülür. Ödeme kimliği
+// yazıldığı için süre taraması bu siparişi iptal etmez; onay webhook ile gelince "hazırlanıyor"a geçer.
+export function kartOdemesiIncelemede(no: string, odemeKimlik: string) {
+  islem(() => {
+    const satir = satirBul(no);
+    if (!satir || satir.odeme_kimlik === odemeKimlik) return;
+    vt().prepare("UPDATE siparis SET odeme_kimlik = ?, guncelleme = ? WHERE id = ?").run(odemeKimlik, simdi(), satir.id);
+    olayEkle(satir.id, satir.durum, `Kart ödemesi iyzico incelemesinde (ödeme no ${odemeKimlik}). Onaylanmadan kargolamayın.`, "sistem");
+  });
+}
+
+// Ödeme başarısız ya da yarıda kaldı: sipariş iptal, stok serbest. Sepet müşterinin tarayıcısında durur.
+export function kartOdemesiBasarisiz(no: string, neden: string) {
+  islem(() => {
+    const satir = satirBul(no);
+    if (!satir || satir.durum !== "odeme_bekliyor" || satir.odeme_kimlik) return;
+    durumuYaz(satir, "iptal", { aciklama: `Kartla ödeme başarısız: ${neden}` }, "sistem");
+  });
 }

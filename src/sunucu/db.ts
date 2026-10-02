@@ -94,6 +94,13 @@ const GOCLER: string[] = [
   );
   CREATE INDEX mesaj_olusturma ON mesaj (okundu, olusturma);
   `,
+  // 3: kartla ödeme (iyzico)
+  `
+  ALTER TABLE siparis ADD COLUMN odeme_token TEXT;
+  ALTER TABLE siparis ADD COLUMN odeme_kimlik TEXT;
+  ALTER TABLE siparis ADD COLUMN odeme_zamani TEXT;
+  CREATE INDEX siparis_odeme_token ON siparis (odeme_token);
+  `,
 ];
 
 function ac(): DatabaseSync {

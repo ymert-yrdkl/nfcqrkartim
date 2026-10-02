@@ -2,7 +2,10 @@ import { KURULUM_PANELI, TICARI } from "@/magaza/ayarlar";
 
 export type Soru = { soru: string; cevap: string[]; anaSayfada?: boolean; grup: "kullanim" | "siparis" };
 
-export const SORULAR: Soru[] = [
+// Ödeme yöntemine dair cevaplar kartla ödemenin (iyzico) açık olup olmamasına göre değişir; bu yüzden
+// sorular istek anında üretilir: sorular(iyzicoAcikMi()).
+export function sorular(kartAcik: boolean): Soru[] {
+  return [
   {
     grup: "kullanim",
     anaSayfada: true,
@@ -60,7 +63,7 @@ export const SORULAR: Soru[] = [
     anaSayfada: true,
     soru: "Siparişim ne zaman kargoya verilir?",
     cevap: [
-      `Havale ya da EFT'niz hesabımıza geçtikten sonra ${TICARI.kargoyaVerilis} içinde kargoya veririz. Kargo ${
+      `${kartAcik ? "Kartla ödemede ödeme hemen onaylanır; havale ya da EFT'de para hesabımıza geçince onaylanır. Onaydan" : "Havale ya da EFT'niz hesabımıza geçtikten"} sonra ${TICARI.kargoyaVerilis} içinde kargoya veririz. Kargo ${
         TICARI.kargoUcreti === 0 ? "ücretsizdir" : "ücreti sipariş özetinde yazar"
       }. Kargo takip numarası sipariş sayfanızda görünür.`,
     ],
@@ -69,7 +72,12 @@ export const SORULAR: Soru[] = [
     grup: "siparis",
     soru: "Nasıl ödeme yaparım?",
     cevap: [
-      `Şimdilik havale ya da EFT ile. Siparişi tamamlayınca hesap bilgisi ve sipariş numaranız ekranda çıkar; açıklamaya sipariş numarasını yazmanız yeterli. Ödeme ${TICARI.odemeSuresiGun} gün içinde gelmezse sipariş iptal edilir ve stok serbest kalır.`,
+      ...(kartAcik
+        ? [
+            "Kredi ya da banka kartıyla veya havale / EFT ile. Kartla ödemede iyzico'nun güvenli ödeme sayfasına geçersiniz; kart bilgileriniz bize ulaşmaz, taksit seçenekleri kartınıza göre o sayfada çıkar.",
+          ]
+        : []),
+      `${kartAcik ? "Havale / EFT seçerseniz" : "Şimdilik havale ya da EFT ile."} Siparişi tamamlayınca hesap bilgisi ve sipariş numaranız ekranda çıkar; açıklamaya sipariş numarasını yazmanız yeterli. Ödeme ${TICARI.odemeSuresiGun} gün içinde gelmezse sipariş iptal edilir ve stok serbest kalır.`,
     ],
   },
   {
@@ -93,4 +101,5 @@ export const SORULAR: Soru[] = [
       `Sepete bir üründen en çok ${TICARI.satirBasinaEnCok} adet eklenebiliyor. Zincir ya da çok şubeli işletmeler için İletişim sayfasından bize yazın; adet ve teslim planını birlikte çıkaralım.`,
     ],
   },
-];
+  ];
+}

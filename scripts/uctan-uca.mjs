@@ -32,6 +32,9 @@ try {
   dogrula(true, "ikili set sepete eklendi, çekmece açıldı");
 
   await m.goto(`${kok}/odeme`, { waitUntil: "load" });
+  await m.locator("#ad").waitFor();
+  // Kartla ödeme açıksa varsayılan kart seçilidir; bu deneme havale akışını sınar.
+  await m.locator('input[name="odeme"][value="havale"]').check();
   await m.getByRole("button", { name: /Siparişi tamamla/ }).click();
   await m.getByText(/alanı düzeltmeniz gerekiyor/).waitFor();
   dogrula(!(await m.getByText(/Invalid input|Too big/).count()), "boş formda İngilizce hata yok");
