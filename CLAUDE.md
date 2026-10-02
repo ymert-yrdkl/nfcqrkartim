@@ -30,6 +30,7 @@ QR'lar ve NFC `https://ahmcloud.com/q/<KOD>` adresine gider; yönlendirme ve kur
 - Ekran görüntüsü (sistem Chrome'u): `node scripts/ekran.mjs .ekran / /urun/ikili-set@390` (Git Bash'te
   `MSYS_NO_PATHCONV=1`). Paylaşım görseli ve ikonlar: `node scripts/paylasim-gorselleri.mjs` (dev açıkken).
 - Uçtan uca deneme: `node scripts/uctan-uca.mjs` (dev açıkken; sipariş → yönetim → sorgulama → stok çakışması).
+- Videolar: `public/video/` (720×1280, sessiz, H.264). Kaynak: sosyal medya klasörü `06-medya/hazir/videolar/site/`. Sıkıştırma: `ffmpeg -i kaynak.mp4 -an -vf scale=720:1280,fps=24 -c:v libx264 -crf 27 -preset slow -movflags +faststart cikti.mp4` (bu makinede ffmpeg yok; `Projeler/flow/node_modules/ffmpeg-static/ffmpeg.exe` kullanıldı). Kayıt: `src/gorseller/index.ts` → `VIDEO`.
 - Ürün render'ları: `python scripts/gorsel/urun_render.py` (numpy, Pillow, OpenCV).
 - Yerel yönetim paneli: `.env.local` içinde `YONETICI_SIFRE`, adres `/yonetim`.
 - Önizleme aracı (preview_start) bu projenin launch.json'unu görmüyor; dev sunucusu Bash arka planda çalıştırıldı.

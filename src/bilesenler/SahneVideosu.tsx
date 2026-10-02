@@ -9,11 +9,13 @@ export function SahneVideosu({
   src,
   poster,
   etiket,
+  odak = "50% 50%",
   className = "",
 }: {
   src: string;
   poster: string;
   etiket: string;
+  odak?: string;
   className?: string;
 }) {
   const video = useRef<HTMLVideoElement>(null);
@@ -61,6 +63,7 @@ export function SahneVideosu({
         onPlay={() => setOynuyor(true)}
         onPause={() => setOynuyor(false)}
         className="size-full object-cover"
+        style={{ objectPosition: odak }}
       />
       <button
         type="button"

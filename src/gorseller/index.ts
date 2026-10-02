@@ -40,8 +40,6 @@ export type Gorsel = {
   odak?: string;
   // Sahnenin ortamı yapay zekâyla üretildi mi (etiket gösterilir).
   yz?: boolean;
-  // Stüdyo görselinde ürün küçük kalıyorsa kırpılmış kutuda büyütme oranı (1 = olduğu gibi).
-  olcek?: number;
 };
 
 const sahne = (src: StaticImageData, alt: string, odak: string): Gorsel => ({ src, alt, zemin: "sahne", odak, yz: true });
@@ -84,5 +82,41 @@ export const GORSEL = {
   cicekciInstagram: sahne(cicekciInstagram, "Çiçekçi tezgâhında buketlerin yanında Instagram takip standı", "58% 60%"),
   otoServisGoogle: sahne(otoServisGoogle, "Oto servis resepsiyonunda Google yorum standı", "52% 57%"),
 } satisfies Record<string, Gorsel>;
+
+// Sahne videoları (public/video, 720×1280, sessiz). Ortam ve el yapay zekâyla üretildi; standın yüzü gerçek baskı.
+export type Video = { src: string; poster: string; etiket: string; odak: string };
+
+export const VIDEO = {
+  telefonuYaklastirin: {
+    src: "/video/telefonu-yaklastirin.mp4",
+    poster: "/video/telefonu-yaklastirin.jpg",
+    etiket: "Kafe kasasında bir müşteri telefonunu Google yorum standına yaklaştırıyor",
+    odak: "50% 62%",
+  },
+  instagramDokunus: {
+    src: "/video/instagram-dokunus.mp4",
+    poster: "/video/instagram-dokunus.jpg",
+    etiket: "Kuaför resepsiyonunda bir müşteri telefonunu Instagram standına yaklaştırıyor",
+    odak: "50% 66%",
+  },
+  ikiliSet: {
+    src: "/video/ikili-set.mp4",
+    poster: "/video/ikili-set.jpg",
+    etiket: "Kafe tezgâhında Google ve Instagram standı, arkada çalışan barista",
+    odak: "50% 66%",
+  },
+  butikInstagram: {
+    src: "/video/butik-instagram.mp4",
+    poster: "/video/butik-instagram.jpg",
+    etiket: "Giyim butiğinin kasasında Instagram takip standı",
+    odak: "50% 62%",
+  },
+  restoranGoogle: {
+    src: "/video/restoran-google.mp4",
+    poster: "/video/restoran-google.jpg",
+    etiket: "Restoran kasasında çay bardağının yanında Google yorum standı",
+    odak: "50% 62%",
+  },
+} satisfies Record<string, Video>;
 
 export const YZ_NOTU = "Sahne görseli yapay zekâyla oluşturuldu; ürün gerçek tasarımıdır.";

@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { dugmeSinifi } from "@/bilesenler/dugme";
-import { UrunResmi } from "@/bilesenler/UrunResmi";
+import { SahneVideosu } from "@/bilesenler/SahneVideosu";
 import { YzNotu } from "@/bilesenler/YzNotu";
-import { GORSEL } from "@/gorseller";
+import { VIDEO } from "@/gorseller";
 import { TICARI } from "@/magaza/ayarlar";
 import { tl } from "@/magaza/para";
 import { URUNLER } from "@/magaza/urunler";
@@ -42,11 +42,9 @@ export function Kahraman() {
       </div>
 
       <figure className="lg:col-span-6">
-        <UrunResmi
-          gorsel={GORSEL.kafeIkili}
-          oncelikli
-          sizes="(min-width: 80rem) 46rem, (min-width: 64rem) 50vw, 100vw"
-          className="aspect-[4/5] w-full sm:aspect-[5/4] lg:aspect-auto lg:h-[min(44rem,calc(100dvh-10rem))]"
+        <SahneVideosu
+          {...VIDEO.telefonuYaklastirin}
+          className="stand-kosesi aspect-[4/5] w-full sm:aspect-[5/4] lg:aspect-auto lg:h-[min(44rem,calc(100dvh-10rem))]"
         />
         <figcaption>
           <YzNotu className="mt-3" />

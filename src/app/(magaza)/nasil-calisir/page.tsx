@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { dugmeSinifi } from "@/bilesenler/dugme";
-import { UrunResmi } from "@/bilesenler/UrunResmi";
+import { SahneVideosu } from "@/bilesenler/SahneVideosu";
 import { YzNotu } from "@/bilesenler/YzNotu";
 import { Anatomi } from "@/bilesenler/vitrin/Anatomi";
 import { DinamikQr } from "@/bilesenler/vitrin/DinamikQr";
 import { Kurulum } from "@/bilesenler/vitrin/Kurulum";
 import { Ozellikler } from "@/bilesenler/vitrin/Ozellikler";
-import { GORSEL } from "@/gorseller";
+import { VIDEO } from "@/gorseller";
 import { TICARI } from "@/magaza/ayarlar";
 
 export const metadata: Metadata = {
@@ -48,7 +48,7 @@ export default function NasilCalisir() {
           </p>
         </div>
         <figure className="lg:col-span-5">
-          <UrunResmi gorsel={GORSEL.googleYakin} oncelikli sizes="(min-width: 64rem) 30rem, 100vw" className="aspect-[4/5] w-full" />
+          <SahneVideosu {...VIDEO.instagramDokunus} className="stand-kosesi aspect-[4/5] w-full" />
           <figcaption>
             <YzNotu className="mt-3" />
           </figcaption>

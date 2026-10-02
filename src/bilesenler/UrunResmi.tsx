@@ -9,15 +9,12 @@ export function UrunResmi({
   className = "",
   oncelikli = false,
   kose = "stand",
-  olcek,
 }: {
   gorsel: Gorsel;
   sizes: string;
   className?: string;
   oncelikli?: boolean;
   kose?: "stand" | "orta" | "yok";
-  // Stüdyo görselinde ürünü büyütmek için (1 = olduğu gibi). Büyütme odak noktasından yapılır.
-  olcek?: number;
 }) {
   const koseSinifi = kose === "stand" ? "stand-kosesi" : kose === "orta" ? "rounded-orta" : "";
   return (
@@ -31,11 +28,7 @@ export function UrunResmi({
         fetchPriority={oncelikli ? "high" : undefined}
         loading={oncelikli ? "eager" : "lazy"}
         className={gorsel.zemin === "seffaf" ? "object-contain" : "object-cover"}
-        style={{
-          objectPosition: gorsel.odak ?? "50% 50%",
-          transform: (olcek ?? gorsel.olcek ?? 1) !== 1 ? `scale(${olcek ?? gorsel.olcek})` : undefined,
-          transformOrigin: gorsel.odak ?? "50% 50%",
-        }}
+        style={{ objectPosition: gorsel.odak ?? "50% 50%" }}
       />
     </div>
   );

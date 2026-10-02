@@ -85,7 +85,7 @@ export default async function UrunSayfasi({ params }: PageProps<"/urun/[slug]">)
 
         <div className="mt-6 grid gap-x-12 gap-y-10 lg:grid-cols-12">
           <div className="lg:col-span-7">
-            <UrunGalerisi gorseller={urun.gorseller} urunAdi={urun.ad} />
+            <UrunGalerisi gorseller={urun.gorseller} video={urun.video} urunAdi={urun.ad} />
           </div>
 
           <div className="lg:col-span-5">

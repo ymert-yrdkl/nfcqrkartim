@@ -1,7 +1,7 @@
 // Ürün kataloğu. Fiyatlar kuruş; sunucu siparişte fiyatı HER ZAMAN buradan yeniden okur.
 // Stok veritabanında "stok kalemi" (sku) bazında tutulur: ikili set bir Google + bir Instagram düşer.
 
-import { GORSEL, type Gorsel } from "@/gorseller";
+import { GORSEL, VIDEO, type Gorsel, type Video } from "@/gorseller";
 
 export type StokKalemi = "google" | "instagram";
 export type UrunSlug = "google-yorum-standi" | "instagram-takip-standi" | "ikili-set";
@@ -16,6 +16,7 @@ export type Urun = {
   icerik: string[]; // kutu içeriği
   stok: { kalem: StokKalemi; adet: number }[];
   gorseller: Gorsel[]; // ilki kapak
+  video?: Video; // galeride ikinci sırada
 };
 
 export const URUNLER: Urun[] = [
@@ -31,7 +32,8 @@ export const URUNLER: Urun[] = [
     ],
     icerik: ["1 adet 100 × 100 mm baskılı pleksi pano", "1 adet 100 × 35 mm pleksi taban"],
     stok: [{ kalem: "google", adet: 1 }],
-    gorseller: [GORSEL.googleUc, GORSEL.googleYakin, GORSEL.googleOn, GORSEL.kafeGoogle, GORSEL.googleParcalar],
+    video: VIDEO.restoranGoogle,
+    gorseller: [GORSEL.googleUc, GORSEL.googleYakin, GORSEL.googleOn, GORSEL.googleParcalar],
   },
   {
     slug: "instagram-takip-standi",
@@ -45,7 +47,8 @@ export const URUNLER: Urun[] = [
     ],
     icerik: ["1 adet 100 × 100 mm baskılı pleksi pano", "1 adet 100 × 35 mm pleksi taban"],
     stok: [{ kalem: "instagram", adet: 1 }],
-    gorseller: [GORSEL.instagramUc, GORSEL.instagramYakin, GORSEL.instagramOn, GORSEL.kuaforInstagram, GORSEL.instagramSol],
+    video: VIDEO.butikInstagram,
+    gorseller: [GORSEL.instagramUc, GORSEL.instagramYakin, GORSEL.instagramOn, GORSEL.instagramSol],
   },
   {
     slug: "ikili-set",
@@ -65,7 +68,8 @@ export const URUNLER: Urun[] = [
       { kalem: "google", adet: 1 },
       { kalem: "instagram", adet: 1 },
     ],
-    gorseller: [GORSEL.ikili, GORSEL.kafeIkili, GORSEL.ikiliUst, GORSEL.kafeIkili2, GORSEL.googleYan],
+    video: VIDEO.ikiliSet,
+    gorseller: [GORSEL.ikili, GORSEL.kafeIkili, GORSEL.ikiliUst, GORSEL.googleYan],
   },
 ];
 
