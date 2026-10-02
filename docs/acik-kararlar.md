@@ -6,12 +6,11 @@ gizlenir ya da yasal metinlerde sarı "eklenecek" etiketiyle görünür.
 ## Satıştan önce mutlaka
 | Konu | Şu an | Nerede |
 |---|---|---|
-| Fiyatlar | Öneri: Google 549 TL, Instagram 549 TL, ikili set 949 TL (piyasa 399-699 TL) | `urunler.ts` → `fiyat` |
 | Banka hesabı (IBAN, alıcı adı) | Yok. Onay sayfası "hesap bilgisini ileteceğiz" diyor | `ayarlar.ts` → `BANKA` |
 | İletişim (telefon, WhatsApp, e-posta) | Yok. İletişim sayfasında yalnız mesaj formu var | `ayarlar.ts` → `ILETISIM` |
 | Şirket bilgileri (unvan, adres, vergi no, MERSİS, KEP) | Yok. Yasal metinlerde sarı etiket | `ayarlar.ts` → `SATICI` |
 | Yönlendirme hizmeti ücretli mi, süresi ne? | SSS'te "ayrıca ücret ödemezsiniz" yazıyor (doğrulanmadı) | `TICARI.yonlendirmeUcreti`, `SATICI.yonlendirmeSuresi` |
-| Kargo ücreti ve firması | Öneri: ücretsiz, 1-3 iş günü, firma belirsiz | `TICARI` |
+| Kargo firması | Belirsiz (kargo ücretsiz, onaylı) | `TICARI.kargoFirmasi` |
 | İade kargo ücretini kim öder | Belirsiz | `SATICI.iadeKargo` |
 | Yasal metinler | Taslak, hukukçu incelemesi gerekli (notlar `src/icerik/yasal.ts` içinde `notlar` alanlarında) | |
 | Stok dağılımı | 40 Google + 40 Instagram varsayıldı | Yönetim → Stok |

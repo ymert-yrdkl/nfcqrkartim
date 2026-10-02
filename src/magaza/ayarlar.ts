@@ -16,7 +16,7 @@ export const KURULUM_PANELI = "https://ahmcloud.com/kart";
 export const ORNEK_KART_KODU = { google: "23EFXF", instagram: "27KN9C" } as const;
 
 export const TICARI = {
-  // ONAY BEKLİYOR: kargo ücreti (kuruş). 0 = ücretsiz.
+  // Kargo ücreti (kuruş). 0 = ücretsiz (Yusuf onaylı, 2 Ekim 2026).
   kargoUcreti: 0,
   // ONAY BEKLİYOR: ödeme onayından sonra kargoya veriliş süresi (iş günü).
   kargoyaVerilisGun: "1-3",

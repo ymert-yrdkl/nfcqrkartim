@@ -10,7 +10,7 @@ export type Urun = {
   slug: UrunSlug;
   ad: string;
   kisaAd: string; // sepet ve model seçicide
-  fiyat: number; // kuruş, KDV dahil (ONAY BEKLİYOR)
+  fiyat: number; // kuruş, KDV dahil (Yusuf onaylı, 2 Ekim 2026)
   ozet: string; // tek cümle
   aciklama: string[]; // ürün sayfasında paragraflar
   icerik: string[]; // kutu içeriği

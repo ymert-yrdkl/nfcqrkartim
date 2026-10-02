@@ -60,15 +60,15 @@ Yazı logosu: işaret + "nfcqrkartim", Bricolage Grotesque 700, harf aralığı 
 - Uzun çizgi (—) kullanılmaz. "Yeni nesil, sorunsuz, devrim, üst seviye, eşsiz" gibi şişirme sözcükler yok.
 - Başlıklar cümle düzeninde (Her Kelime Büyük Değil).
 
-## Ticari bilgiler (ÖNERİ, Yusuf onaylayacak)
+## Ticari bilgiler (fiyat ve kargo Yusuf onaylı, 2 Ekim 2026)
 Tek yer: `src/magaza/ayarlar.ts`. Onaylanınca bu tablo güncellenir.
 
 | Konu | Öneri | Dayanak |
 |---|---|---|
-| Google yorum standı | 549 TL | Trendyol/idefix benzerleri 399-699 TL (Ekim 2026) |
-| Instagram takip standı | 549 TL | aynı |
-| İkili set (Google + Instagram) | 949 TL | iki tekliden 149 TL az |
-| Kargo | Ücretsiz, 1-3 iş gününde kargoda | |
+| Google yorum standı | 549 TL (onaylı) | Trendyol/idefix benzerleri 399-699 TL (Ekim 2026) |
+| Instagram takip standı | 549 TL (onaylı) | aynı |
+| İkili set (Google + Instagram) | 949 TL (onaylı) | iki tekliden 149 TL az |
+| Kargo | Ücretsiz (onaylı), 1-3 iş gününde kargoda | |
 | Ödeme | Havale / EFT (kartla ödeme için iyzico ya da PayTR hesabı gerekir) | |
 | Stok | Google 40, Instagram 40 (toplam ~80) | Yusuf: "yaklaşık 80 adet" |
 | Kurulum paneli | https://ahmcloud.com/kart | QR'lar ahmcloud.com/q/KOD adresine gider |
