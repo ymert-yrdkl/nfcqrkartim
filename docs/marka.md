@@ -43,6 +43,11 @@ Saf siyah (#000) ve saf beyaz (#FFF) zemin olarak kullanılmaz (ürünün kendis
 - Fosfor vurgu: başlıkta tek ifadenin altına sinyal yeşili bant (metnin x-yüksekliğinde).
 - Mono teknik etiketler: `KART 23EFXF`, `100 × 100 MM`, `NFC + QR`.
 
+## Logo dosyaları
+`src/gorseller/marka/`: `logo-isaret.svg` (mürekkep), `logo-isaret-vurgulu.svg` (iç kare sinyal yeşili),
+`logo-isaret-koyu-zemin.svg` (koyu zemin), `profil.svg` + `profil-1080.png` (Instagram profil fotoğrafı).
+Yazı logosu: işaret + "nfcqrkartim", Bricolage Grotesque 700, harf aralığı -0.03em, işaret yazının ~1.3 katı.
+
 ## Görsel kural
 - Ürün her zaman gerçek tasarımıyla görünür (stüdyo render'ı ya da gerçek fotoğraf). Ürünün baskısı,
   QR'ı ve yazısı yeniden çizilmez.
