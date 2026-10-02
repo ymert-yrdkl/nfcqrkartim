@@ -39,7 +39,7 @@ const BAGLANTI_REHBERI = [
 export default function NasilCalisir() {
   return (
     <>
-      <section className="kabuk grid items-end gap-10 pt-10 pb-6 lg:grid-cols-12 lg:pt-14">
+      <section className="kabuk grid items-center gap-10 pt-10 pb-6 lg:grid-cols-12 lg:pt-14">
         <div className="lg:col-span-7">
           <h1 className="text-dev [font-stretch:84%]">Nasıl çalışır?</h1>
           <p className="mt-5 max-w-[52ch] text-lg text-murekkep-2">

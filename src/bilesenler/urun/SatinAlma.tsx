@@ -10,7 +10,7 @@ import { tl } from "@/magaza/para";
 import type { UrunSlug } from "@/magaza/urunler";
 
 // Ürün sayfasındaki satın alma kutusu: adet + "Sepete ekle" + "Hemen al".
-// Telefonda ana düğme ekrandan çıkınca altta yapışkan bir satın alma çubuğu belirir.
+// Telefonda ana düğmeler ekranda değilken altta yapışkan bir satın alma çubuğu durur.
 export function SatinAlma({
   slug,
   ad,
@@ -36,7 +36,8 @@ export function SatinAlma({
   useEffect(() => {
     const el = anaDugme.current;
     if (!el) return;
-    const gozcu = new IntersectionObserver(([g]) => setCubukGorunur(!g.isIntersecting && g.boundingClientRect.top < 0));
+    // Ana düğmeler ekranda değilse (henüz ulaşılmadı ya da geçildi) alttaki çubuk görünür.
+    const gozcu = new IntersectionObserver(([g]) => setCubukGorunur(!g.isIntersecting));
     gozcu.observe(el);
     return () => gozcu.disconnect();
   }, []);
